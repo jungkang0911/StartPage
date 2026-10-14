@@ -1,19 +1,24 @@
 ﻿<#
-  安裝 / 更新 myIndex 起始頁
+  安裝 / 更新 StartPage 起始頁
   用法：
-    .\install.ps1                                  # 裝到 %USERPROFILE%\myIndex
+    .\install.ps1                                  # 裝到 %USERPROFILE%\StartPage
     .\install.ps1 -Target D:\MyStart               # 指定資料夾
     .\install.ps1 -Config .\startpage-default.json # 一併產生 config.js（首次開啟的預設內容）
+    .\install.ps1 -NoIntegrations                  # 只裝頁面，不複製通知 / DevOps / 行事曆腳本
+  會寫入：index.html、整合腳本（notify / devops-tasks / calendar-sync .ps1）；
+          options.js、settings.json 只在不存在時從 examples 複製，之後不覆蓋（個人設定）。
   既有 index.html / config.js 會先備份成 .bak；使用者在瀏覽器裡的自訂內容存在 localStorage，不受影響。
 #>
 param(
-  [string]$Target = (Join-Path $env:USERPROFILE 'myIndex'),
-  [string]$Config
+  [string]$Target = (Join-Path $env:USERPROFILE 'StartPage'),
+  [string]$Config,
+  [switch]$NoIntegrations
 )
 $ErrorActionPreference = 'Stop'
 $utf8 = New-Object System.Text.UTF8Encoding($false)
+$root = Split-Path $PSScriptRoot -Parent
 
-$src = Join-Path $PSScriptRoot '..\assets\index.html'
+$src = Join-Path $root 'assets\index.html'
 if (-not (Test-Path $src)) { throw "找不到範本：$src" }
 
 # Validate and re-serialize JSON before changing installation files.
@@ -35,6 +40,19 @@ if ($Config) {
   if (Test-Path $cfg) { Copy-Item $cfg "$cfg.bak" -Force; Write-Host "已備份舊 config.js → $cfg.bak" }
   [IO.File]::WriteAllText($cfg, "window.STARTPAGE_DEFAULT = $json;`n", $utf8)
   Write-Host "已產生 → $cfg"
+}
+
+# 個人設定檔：只在第一次安裝時建立，更新不覆蓋
+$personal = @{ 'options.js' = 'examples\options.example.js' }
+if (-not $NoIntegrations) { $personal['settings.json'] = 'examples\settings.example.json' }
+foreach ($name in $personal.Keys) {
+  $to = Join-Path $Target $name
+  if (-not (Test-Path $to)) { Copy-Item (Join-Path $root $personal[$name]) $to; Write-Host "已建立 → $to" }
+}
+
+if (-not $NoIntegrations) {
+  Get-ChildItem (Join-Path $root 'integrations\*.ps1') | ForEach-Object { Copy-Item $_.FullName $Target -Force }
+  Write-Host "已複製整合腳本 → $Target（notify.ps1 / devops-tasks.ps1 / calendar-sync.ps1，設定見 settings.json）"
 }
 
 $url = ([Uri](Resolve-Path $dst).Path).AbsoluteUri

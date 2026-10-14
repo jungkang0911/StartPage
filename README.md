@@ -1,146 +1,246 @@
-# myIndex
+# StartPage
 
-Personal homepage · Fixed HTML template · AI-ready Skill
+單檔 HTML 瀏覽器起始頁，可直接安裝，也可以交給 AI 當 Skill 使用
 
-**讓 AI 幫你安裝同一套起始頁，把每天會用到的連結、筆記與待辦放在一起。**
+**把每天會用到的連結、筆記、待辦、通知和會議放在同一頁。不用架伺服器、不用註冊帳號，資料只存在你的瀏覽器裡。**
 
-myIndex 是可直接開啟的單檔 HTML 起始頁，也是一份能交給 AI 使用的 Skill。每次安裝都複製專案中的固定範本，個人設定另外保存，避免 AI 每次產生不同的版型。
+![StartPage 淺色版：分頁、搜尋、書籤、筆記與待辦](docs/images/light-demo.png)
 
-![myIndex 淺色版：分頁、搜尋、書籤、筆記與待辦](docs/images/light-demo.png)
+## 特色
 
-## 為什麼用 myIndex Skill？
+- **一個 HTML 檔就能用**：不需要 Node.js、資料庫或網站伺服器，雙擊 `index.html` 就能開。
+- **資料在自己手上**：書籤、筆記和待辦都存在瀏覽器 `localStorage`，本專案不會上傳任何資料。
+- **設定都開放**：標題、搜尋引擎、favicon、各項整合功能都能在頁面「⋯ → ⚙ 設定」切換，也可以用 `options.js` 統一派送給整個團隊。
+- **選用的本機整合**：PowerShell 腳本可以把排程通知、Azure DevOps 工作項、Outlook 會議送進頁面，用不到就關掉。
+- **AI 友善**：附 `SKILL.md`。AI 只會照固定範本安裝，不會每次產生不同版型。
 
-**本機落地，資料由你掌握。** AI 把頁面安裝到你的電腦，書籤、筆記與待辦儲存在目前瀏覽器，不需要為 myIndex 註冊帳號，也不依賴雲端資料庫。個人資料不會由本專案自動上傳；搜尋、點擊外部連結或使用外部圖片時，仍會連線到相應網站。
-
-**每次都是同一套版型。** Skill 直接使用隨附的 HTML 範本，AI 負責安裝與整理設定，不必每次重新設計頁面。更新可以保留個人設定，版型也方便維護。
-
-**說出需求，讓 AI 幫你整理。** 不必自己編輯 HTML，就能請 AI 協助安裝、把指定書籤資料夾轉為設定，或產生新增連結的匯入片段。
-
-**輕量、可攜、可備份。** 頁面不需要後端伺服器或套件建置；匯出 JSON 就能備份個人內容，再帶到另一台電腦使用。固定範本與個人資料分開，也方便分享一套不含個資的工具給同事。
-
-## 一頁開始今天的工作
-
-| 功能 | 使用方式 |
+| 功能 | 說明 |
 | --- | --- |
-| 分頁與書籤區塊 | 依工作、學習或生活整理連結 |
-| 筆記與待辦 | 直接輸入、自動儲存在目前瀏覽器 |
-| 拖曳排序 | 編輯模式移動區塊、連結，或拖到另一個分頁 |
-| 搜尋列與時鐘 | 開啟頁面就能搜尋及查看時間 |
-| 深色／淺色主題 | 用右上角主題按鈕切換 |
-| 自訂圖示 | Emoji 或明確指定的 HTTPS 圖片 |
-| 本地路徑 | 保存資料夾、檔案及網路分享路徑；也可複製路徑 |
-| 匯入／匯出 | 支援設定 JSON 與瀏覽器匯出的書籤 HTML |
+| 分頁與書籤區塊 | 依工作、學習或生活整理連結；區塊可以設顏色、收合 |
+| ★ 常用列 | 連結加星號後，會顯示在搜尋列下方，每個分頁都看得到 |
+| 筆記（Markdown） | 支援標題、清單、勾選框、表格、程式碼；網址和本機路徑會自動變成連結 |
+| 待辦與提醒 | 輸入「14:30 開會」會自動設定提醒，時間到跳出桌面通知 |
+| 🔔 通知中心 | 收集待辦提醒、腳本送來的通知（`notify.ps1`）和會議提醒 |
+| 拖曳排序 | 在編輯模式拖曳連結（可以跨區塊）或區塊；拖到上方分頁標籤可以移過去 |
+| 本機路徑 | `D:\資料夾`、`\\server\share\檔.xlsx` 都能存，也可以一鍵複製路徑 |
+| 匯入／匯出 | 支援設定 JSON 和瀏覽器匯出的書籤 HTML |
+| 深色／淺色 | 右上角 ◐ 切換 |
 
-![myIndex 深色主題](docs/images/dark-demo.png)
+![StartPage 深色主題](docs/images/dark-demo.png)
 
-## 快速試用
+## 安裝
 
-下載完整專案，解壓後在專案資料夾開啟 PowerShell：
+### Windows：一行指令
+
+在 PowerShell 執行（會裝到 `%USERPROFILE%\StartPage`）：
 
 ```powershell
-# 安裝到使用者資料夾的 myIndex
-powershell.exe -NoProfile -File .\scripts\install.ps1
-
-# 安裝範例內容到指定資料夾
-powershell.exe -NoProfile -File .\scripts\install.ps1 -Target D:\myIndex -Config .\examples\default.json
+irm https://raw.githubusercontent.com/jungkang0911/StartPage/main/scripts/web-install.ps1 | iex
 ```
 
-用 Edge 或 Chrome 開啟安裝位置的 `index.html`。不需要 Node.js、資料庫或網站伺服器。安裝腳本供 Windows PowerShell 5.1+ 使用；其他平台可手動複製 `assets/index.html`，以支援現代 JavaScript 的瀏覽器開啟。
+想裝到別的資料夾：
 
-## 交給 AI 安裝
-
-把完整專案放進 AI 工具的 skills 目錄，或直接提供 `SKILL.md` 的位置，並確保 `assets/` 與 `scripts/` 一起保留。
-
-你可以說：
-
-> 使用這份 myindex Skill，幫我安裝起始頁並加入常用連結。使用固定範本，不修改版型。
-
-> 更新我的起始頁，保留原本的安裝位置、設定與瀏覽器資料。
-
-> 把這三個網址整理成可匯入起始頁的 JSON 片段。
-
-Skill 支援能讀取本機檔案並執行 PowerShell 的 AI 工作環境。網頁聊天若沒有本機執行能力，仍可閱讀指令並協助產生設定。
-
-## 為什麼每次看起來一致？
-
-```mermaid
-flowchart LR
-  A[固定 assets/index.html] -->|原樣複製| B[安裝的 index.html]
-  C[個人 config.js] -->|首次使用預設內容| B
-  B --> D[瀏覽器 localStorage]
-  D --> E[匯出 JSON 備份]
+```powershell
+$env:STARTPAGE_TARGET = 'D:\StartPage'; irm https://raw.githubusercontent.com/jungkang0911/StartPage/main/scripts/web-install.ps1 | iex
 ```
 
-安裝程式複製完整範本，SHA-256 可用來確認檔案逐位元一致。分頁名稱、連結及筆記放在設定資料中；同一版範本與相同設定會得到相同介面結構，時間、內容與瀏覽器字型等仍可能不同。
+再執行一次同一行指令就是更新。`options.js`、`settings.json` 這些個人設定，以及瀏覽器裡的資料都會保留。
 
-`config.js` 的格式如下，JSON 結構可參考 [examples/default.json](examples/default.json)：
+### Windows：從原始碼安裝
+
+```powershell
+git clone https://github.com/jungkang0911/StartPage.git
+cd StartPage
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1                      # 預設位置
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Target D:\StartPage  # 指定資料夾
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Config .\examples\default.json  # 附範例內容
+```
+
+`-NoIntegrations` 只安裝頁面，不複製整合腳本。
+
+### macOS／Linux
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/jungkang0911/StartPage/main/scripts/install.sh | sh
+# 或：sh scripts/install.sh ~/Sites/start
+```
+
+裝好後，用 Edge、Chrome 或 Firefox 開啟輸出的 `file:///…/index.html`。
+
+### 安裝後的資料夾
+
+```text
+index.html          頁面（每次更新都會覆蓋，舊版備份成 index.html.bak）
+options.js          功能設定（只在第一次安裝時建立，之後不覆蓋）
+config.js           首次開啟的預設內容（用 -Config 時才產生）
+settings.json       整合腳本的設定（EWS 網址、DevOps 組織、ntfy）
+notify.ps1          送通知、待辦、筆記到頁面
+devops-tasks.ps1    同步 Azure DevOps 工作項
+calendar-sync.ps1   同步 Outlook／Exchange 行事曆
+```
+
+## 平台支援
+
+| 項目 | Windows | macOS／Linux |
+| --- | --- | --- |
+| 頁面本身（書籤、筆記、待辦、提醒、匯入匯出） | ✔ | ✔（任何現代瀏覽器） |
+| 一行安裝 | `web-install.ps1` | `install.sh` |
+| `notify.ps1` 通知／待辦 | ✔ | 安裝 [PowerShell 7](https://learn.microsoft.com/powershell/scripting/install/installing-powershell)（`pwsh`）後可用 |
+| `devops-tasks.ps1` | ✔ | `pwsh` 加 Azure CLI 可用；`-Install` 排程只支援 Windows（其他平台改用 cron） |
+| `calendar-sync.ps1` | ✔（用目前登入的 Windows 帳號連 Exchange） | ✖ |
+| 本機路徑連結 `D:\…`、`\\server\…` | ✔ | 不適用 |
+
+## 設定
+
+設定有三層，上面的會蓋掉下面的：
+
+1. 頁面「⋯ → ⚙ 設定」：存在瀏覽器裡，會跟著匯出／匯入一起帶走
+2. 安裝資料夾的 `options.js`：適合統一派送給團隊
+3. 內建預設值
+
+![設定視窗](docs/images/settings.png)
+
+`options.js`（完整範例見 [examples/options.example.js](examples/options.example.js)，只寫要改的項目即可）：
 
 ```javascript
-window.STARTPAGE_DEFAULT = { /* 設定 JSON */ };
+window.STARTPAGE_OPTIONS = {
+  title: '★ 我的首頁',
+  favicon: true,          // 自動抓網站 /favicon.ico；預設 false，只用字母／Emoji，不對外連線
+  devops: true,           // 開啟 DevOps 區塊
+  calendar: true,         // 開啟 Outlook 會議倒數與會前通知
+  calendarRemind: 10,
+  engines: [['Google', 'https://www.google.com/search?q='], ['Bing', 'https://www.bing.com/search?q=']],
+};
 ```
 
-已有 localStorage 時會優先載入已儲存資料，修改 `config.js` 不會直接覆蓋既有內容。要套用新設定，請在頁面「⋯ → 匯入」選擇 JSON。
+| 選項 | 預設 | 說明 |
+| --- | --- | --- |
+| `title` | `★ StartPage` | 左上角文字 |
+| `favicon` | `false` | `true` 時向各網站請求 `/favicon.ico`，內網站台也適用 |
+| `engines` | Google、Bing、DuckDuckGo、GitHub、StackOverflow | 搜尋引擎清單，格式為 `[名稱, 查詢網址]` |
+| `inbox` / `inboxSec` | `true` / `10` | 每隔幾秒讀一次 `inbox.js`（`notify.ps1` 產生） |
+| `devops` / `devopsSec` | `false` / `60` | DevOps 區塊，讀 `devops.js` |
+| `calendar` / `calendarSec` | `false` / `60` | 行事曆，讀 `calendar.js` |
+| `calendarRemind` | `10` | 會議開始前幾分鐘通知 |
+| `calendarStrip` | `false` | 在常用列下方顯示 1~3 天的行事曆 |
+
+### 預設內容（config.js）
+
+`config.js` 只在瀏覽器還沒有資料時（第一次開啟）生效。格式參考 [examples/default.json](examples/default.json)，通常用 `install.ps1 -Config xxx.json` 產生。如果瀏覽器已經有資料，請改用「⋯ → 匯入」。
+
+## 整合功能（選用）
+
+整合腳本都會寫一個 `.js` 檔到安裝資料夾，頁面定時重新讀取。因為 `file://` 頁面不能用 fetch，所以改用 `<script>` 載入。設定寫在同資料夾的 `settings.json`（範本：[examples/settings.example.json](examples/settings.example.json)）：
+
+```json
+{
+  "calendar": { "ewsUrl": "https://mail.example.com/EWS/Exchange.asmx", "days": 7 },
+  "devops":   { "org": "https://dev.azure.com/my-org", "project": "", "types": ["Task"] },
+  "ntfy":     { "url": "https://ntfy.sh/my-topic" }
+}
+```
+
+`settings.json` 和腳本產生的 `inbox.js`、`devops.js`、`calendar.js` 都是個人資料，已列在 `.gitignore`。
+
+### 通知、待辦、筆記：notify.ps1
+
+讓排程、批次或 AI 工具把訊息送進起始頁：
+
+```powershell
+& "$env:USERPROFILE\StartPage\notify.ps1" "夜間批次完成"
+& "$env:USERPROFILE\StartPage\notify.ps1" "匯入失敗：連線逾時" -Title "夜間批次" -Priority high
+& "$env:USERPROFILE\StartPage\notify.ps1" "報表已產生" -Click "D:\Report\今日.xlsx"
+& "$env:USERPROFILE\StartPage\notify.ps1" "回覆週報" -Todo          # 加到待辦清單
+& "$env:USERPROFILE\StartPage\notify.ps1" "會議紀錄：D:\Notes\a.md" -Note   # 附加到筆記
+```
+
+`-Priority min|low` 只記錄、不跳通知；`high|urgent` 的通知不會自動消失。`settings.json` 填了 `ntfy.url` 的話，會同時推播到 [ntfy](https://ntfy.sh)，手機也收得到。
+
+### Azure DevOps 工作項：devops-tasks.ps1
+
+需要 [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli)，並先執行 `az login`。腳本用 az 的 token，不會存密碼。
+
+```powershell
+& "$env:USERPROFILE\StartPage\devops-tasks.ps1"            # 先手動跑一次
+& "$env:USERPROFILE\StartPage\devops-tasks.ps1" -Install   # 建立工作排程（每 30 分鐘、登入時各跑一次）
+```
+
+接著在頁面「⚙ 設定」開啟 DevOps，再用「＋ 新增區塊 → DevOps Task」加到想放的分頁。
+
+### Outlook 行事曆：calendar-sync.ps1
+
+用目前登入的 Windows／AD 帳號連 Exchange Web Services（EWS），不存密碼。第一次執行會自動從 NuGet 下載 `Microsoft.Exchange.WebServices.dll`（MIT 授權）到 `lib\`。
+
+```powershell
+& "$env:USERPROFILE\StartPage\calendar-sync.ps1" -Install   # 每 10 分鐘同步
+```
+
+開啟後，時鐘下方會顯示「下一場會議」倒數，會議前會跳通知。只支援有開 EWS 的 Exchange（地端或 Exchange Online 的整合驗證環境）。
 
 ## 日常操作
 
 ### 拖曳連結，跨區塊整理
 
-進入編輯模式，將 GitHub 從「常用工具」拖到「閱讀清單」。下圖為實際頁面操作錄製。
-
 ![拖曳連結到另一個區塊的操作動畫](docs/images/drag-demo.gif)
 
 ### 匯入設定，加入新連結
 
-選擇 JSON 片段，把新連結加入現有區塊，不覆蓋原本的筆記與待辦。
-
 ![匯入 JSON 片段加入連結的操作動畫](docs/images/import-demo.gif)
 
-1. 按「編輯」新增分頁、書籤區塊與連結。
-2. 在編輯模式拖曳排序；拖到分頁標籤可跨分頁移動。
-3. 筆記及待辦會自動儲存。
-4. 使用「⋯ → 匯出設定」備份，換瀏覽器或電腦時再匯入。
+1. 按「✎ 編輯」新增分頁、書籤區塊和連結；🎨 可以改區塊顏色。
+2. 在編輯模式拖曳排序；拖到分頁標籤可以跨分頁移動。
+3. 筆記和待辦會自動儲存；筆記點一下就能編輯，離開後顯示 Markdown 排版。
+4. 「⋯ → 匯出設定」可以備份，換瀏覽器或換電腦時再匯入。
 
-完整 JSON（含 `pages`）會取代目前設定，頁面會先確認；只有 `widgets` 的片段會合併連結並略過相同網址。
+完整 JSON（含 `pages`）會取代目前所有設定，匯入前頁面會先確認；只有 `widgets` 的片段則是合併進去，相同網址會略過。
 
-## 從 Edge／Chrome 書籤建立設定
-
-```powershell
-# 只列出資料夾與連結數，不列網址
-powershell.exe -NoProfile -File .\scripts\bookmarks-to-config.ps1 -List
-```
-
-再以 PowerShell 呼叫腳本，指定你選擇的資料夾：
+## 從 Edge／Chrome 書籤建立預設內容
 
 ```powershell
-& .\scripts\bookmarks-to-config.ps1 -Folders '書籤列/工作','書籤列/學習' -Out .\my-default.json
-& .\scripts\install.ps1 -Config .\my-default.json
+.\scripts\bookmarks-to-config.ps1 -List                                    # 只列資料夾和連結數，不列網址
+.\scripts\bookmarks-to-config.ps1 -Folders '書籤列/工作','書籤列/學習' -Out .\my-default.json
+.\scripts\install.ps1 -Config .\my-default.json
 ```
 
-加上 `-Browser Chrome` 可改用 Chrome；非 Default 設定檔可用 `-Path` 指定 Bookmarks 檔。腳本不修改原書籤，也不匯入行動裝置書籤。
+加上 `-Browser Chrome` 改讀 Chrome。如果不是 Default 設定檔，用 `-Path` 指定 Bookmarks 檔。
 
 ## 設成瀏覽器首頁
 
-在 Edge／Chrome 的啟動設定中選「開啟特定頁面」，填入安裝程式輸出的 `file:///` 網址。首頁按鈕也可以使用該網址。新分頁通常需要另用擴充功能；公司裝置若有管理原則，請改用書籤或釘選分頁。
+在 Edge／Chrome 的啟動設定選「開啟特定頁面」，填入安裝時輸出的 `file:///` 網址；首頁按鈕也可以填同一個網址。「新分頁」通常要另裝擴充功能才能指定。公司電腦如果被原則鎖住，可以改成加到書籤列或釘選分頁。
 
-## 資料與更新
+## 交給 AI 安裝
 
-- 個人資料存在瀏覽器 `localStorage`，鍵值為 `startpage.v1`；不會由本專案同步到雲端。
-- 為相容舊版，保留 `startpage.v1` 與 `window.STARTPAGE_DEFAULT` 設定名稱；產品與 Skill 名稱為 myIndex。
-- 清除瀏覽資料、換瀏覽器或移動 HTML 路徑，可能看不到舊資料，請先匯出備份。
-- 外部連結、搜尋及明確指定的 HTTPS 圖片會連線到對應網站；預設圖示使用字母或 Emoji，不會自動向書籤網站請求 favicon。
-- 更新請使用同一個安裝路徑。不傳 `-Config` 時會保留現有 `config.js`，舊 HTML 備份為 `.bak`。
-- 本地路徑能否直接開啟取決於瀏覽器限制，可使用複製路徑功能。
-- 請勿將個人設定、內部網址、Token 或真實書籤提交到公開 repository。
+把整個專案放進 AI 工具的 skills 目錄（`assets/`、`scripts/`、`integrations/`、`examples/` 都要一起放），或直接把 `SKILL.md` 的位置給它。可以這樣說：
+
+> 用 startpage Skill 幫我安裝起始頁，並從 Edge 書籤挑資料夾當預設內容。
+
+> 更新我的起始頁，保留原本的位置和設定。
+
+> 幫我開啟 DevOps 整合，組織是 https://dev.azure.com/my-org。
+
+## 資料與隱私
+
+- 個人資料存在瀏覽器 `localStorage`，key 是 `startpage.v1`。清除瀏覽資料、換瀏覽器或移動 HTML 的路徑，都可能看不到舊資料，請先匯出備份。
+- 更新時請用同一個安裝路徑。
+- favicon 預設關閉，頁面不會主動連到書籤網站；只有搜尋、點連結和你自己指定的圖片網址會連外。
+- 請不要把個人設定、內部網址或 Token 提交到公開的 repository。
 
 ## 專案結構
 
 ```text
-SKILL.md                       AI 使用指引與固定範本規則
-assets/index.html              唯一 HTML 範本
-scripts/install.ps1            安裝／更新
-scripts/bookmarks-to-config.ps1 書籤轉設定
-examples/default.json          不含個資的範例內容
-docs/images/                   實際頁面截圖
+assets/index.html                 唯一的頁面範本
+examples/default.json             範例內容（不含個資）
+examples/options.example.js       功能設定範本 → options.js
+examples/settings.example.json    整合腳本設定範本 → settings.json
+scripts/web-install.ps1           Windows 一行安裝
+scripts/install.ps1               Windows 安裝／更新
+scripts/install.sh                macOS／Linux 安裝
+scripts/bookmarks-to-config.ps1   書籤轉預設內容
+integrations/notify.ps1           通知／待辦／筆記
+integrations/devops-tasks.ps1     Azure DevOps 工作項
+integrations/calendar-sync.ps1    Outlook 行事曆
+SKILL.md                          給 AI 的使用指引
+docs/images/                      截圖
 ```
 
-採用 [MIT License](LICENSE)，可使用、修改與散布，請保留授權聲明。
+採用 [MIT License](LICENSE)。

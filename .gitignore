@@ -3,5 +3,14 @@ config.js
 node_modules/
 .env*
 startpage-*.json
-myindex-*.json
 !examples/default.json
+
+# 個人設定與整合腳本產生的資料
+settings.json
+options.js
+inbox.js
+devops.js
+calendar.js
+ntfy.txt
+lib/
+*.tmp

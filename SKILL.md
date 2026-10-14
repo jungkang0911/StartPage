@@ -1,12 +1,12 @@
 ---
-name: myindex
+name: startpage
 description: >
-  幫同仁安裝 / 更新個人瀏覽器起始頁 myIndex（單檔 HTML：分頁、書籤區塊、本地路徑連結、筆記、待辦、搜尋列，資料存瀏覽器 localStorage），
-  可從 Edge/Chrome 書籤挑資料夾產生預設內容 config.js，並教學設成瀏覽器首頁。
-  使用者說「裝起始頁」「安裝 myIndex」「我也要那個首頁」「更新起始頁」「把書籤做成起始頁」「設成首頁」「起始頁加連結」「myindex」時使用。
+  安裝 / 更新個人瀏覽器起始頁 StartPage（單檔 HTML：分頁、書籤區塊、本地路徑連結、Markdown 筆記、待辦提醒、通知中心、搜尋列，資料存瀏覽器 localStorage），
+  可從 Edge/Chrome 書籤挑資料夾產生預設內容 config.js、調整 options.js 功能設定、設定通知 / Azure DevOps / Outlook 行事曆整合，並教學設成瀏覽器首頁。
+  使用者說「裝起始頁」「安裝 StartPage」「我也要那個首頁」「更新起始頁」「把書籤做成起始頁」「設成首頁」「起始頁加連結」「startpage」時使用。
 ---
 
-# myindex
+# startpage
 
 ## 固定範本規則
 
@@ -15,11 +15,13 @@ description: >
 - 除非使用者明確要求修改版型，否則不修改範本。缺少範本時取得完整專案，不憑文字描述重建。
 - 安裝完成比較 `assets/index.html` 與目標 `index.html` 的 SHA-256，必須相同。更新保留原路徑與既有 `config.js`。
 
-呼叫格式：`/myindex [安裝|更新|書籤|首頁|加連結 <網址…>]`
+呼叫格式：`/startpage [安裝|更新|書籤|首頁|設定|整合|加連結 <網址…>]`
 
 - 未指定動作 → 依序做：安裝 →（詢問是否要從書籤產生預設內容）→ 教學設成首頁
 - `更新` → 只覆蓋 index.html，使用者自訂內容不受影響
 - `書籤` → 從瀏覽器書籤產生預設內容
+- `設定` → 調整 options.js（見步驟 5）
+- `整合` → 設定 settings.json 並啟用通知 / DevOps / 行事曆（見步驟 6）
 - `首頁` → 只給設定首頁的教學
 - `加連結`（或參數直接給網址）→ 產生匯入用 JSON 片段（見步驟 4），不碰 localStorage
 
@@ -30,10 +32,12 @@ description: >
 | 項目 | 值 |
 |------|-----|
 | 範本 | 本 skill 資料夾 `assets/index.html` |
-| 預設安裝位置 | `%USERPROFILE%\myIndex\index.html`（使用者指定別處就照用） |
+| 預設安裝位置 | `%USERPROFILE%\StartPage\index.html`（使用者指定別處就照用） |
+| 功能設定 | 同資料夾 `options.js`（`window.STARTPAGE_OPTIONS = {...};`），首次安裝從 `examples/options.example.js` 複製，之後不覆蓋；頁面「⋯ → ⚙ 設定」存的值優先 |
+| 整合設定 | 同資料夾 `settings.json`（calendar.ewsUrl / devops.org / ntfy.url），首次安裝從 `examples/settings.example.json` 複製，之後不覆蓋 |
 | 預設內容檔 | 同資料夾 `config.js`（`window.STARTPAGE_DEFAULT = {...};`），只在 localStorage 為空時生效 |
 | 使用者資料 | 存在瀏覽器 localStorage（key `startpage.v1`），**不在檔案裡** |
-| 腳本 | `scripts/install.ps1`、`scripts/bookmarks-to-config.ps1`（以下 `$SK` = 本 skill 資料夾的絕對路徑） |
+| 腳本 | `scripts/install.ps1`、`scripts/bookmarks-to-config.ps1`；整合腳本在 `integrations/`，安裝時複製到安裝資料夾（以下 `$SK` = 本 skill 資料夾的絕對路徑，`$SP` = 安裝資料夾） |
 
 腳本為 UTF-8 with BOM（Windows PowerShell 5.1 才不會讀成亂碼），修改時要保留 BOM。
 
@@ -64,7 +68,7 @@ description: >
 2. 把清單給使用者，**請他自己挑**要放上起始頁的資料夾（工作相關的）。不要自行判斷或建議私人資料夾。
 3. 產生 JSON 並安裝成 config.js：
    ```powershell
-   $json = "$env:USERPROFILE\myIndex\startpage-default.json"
+   $json = "$env:USERPROFILE\StartPage\startpage-default.json"
    & "$SK\scripts\bookmarks-to-config.ps1" -Folders '書籤列/工作','書籤列/DevOps' -Out $json
    & "$SK\scripts\install.ps1" -Config $json
    ```
@@ -92,14 +96,35 @@ description: >
 ```json
 { "page": "首頁",
   "widgets": [{ "title": "負責的系統", "links": [
-    { "name": "會員中心 PROD", "url": "https://…" },
-    { "name": "會員中心 UAT",  "url": "https://…" } ]}]}
+    { "name": "訂單系統 PROD", "url": "https://…" },
+    { "name": "訂單系統 UAT",  "url": "https://…" } ]}]}
 ```
 - 存到安裝資料夾（如 `add-links.json`，UTF-8 無 BOM）。連結名稱、區塊標題依使用者描述命名，不清楚再問。
 - `page`：分頁名稱，可省略；找不到就併入目前分頁。
 - 同名書籤區塊 → 連結加進去，重複網址自動略過；沒有同名區塊 → 新增區塊。
 - **不要**用含 `pages` 的 JSON 加連結：那是完整設定檔，匯入會整份取代（頁面會先跳確認）。
 - 匯入後要換位置：編輯模式拖到上方分頁標籤，或用 ⇄ / 連結 ✎ 的「所在區塊」。
+
+### 5. 功能設定（options.js）
+
+- 個人調整：請使用者在頁面「⋯ → ⚙ 設定」改（標題、favicon、各整合開關、會前通知分鐘數），存在 localStorage，優先於 options.js。
+- 派送 / 批次設定：改 `$SP\options.js`（`window.STARTPAGE_OPTIONS = {...};`，只寫要改的鍵）。可用鍵見 `examples/options.example.js`：
+  `title`、`favicon`、`engines`、`inbox`/`inboxSec`、`devops`/`devopsSec`、`calendar`/`calendarSec`、`calendarRemind`、`calendarStrip`。
+- 改完請使用者重新整理頁面。若頁面「⚙ 設定」存過同一個鍵，會蓋掉 options.js → 請他按「↺ 設定恢復預設」。
+
+### 6. 整合（settings.json + 整合腳本，Windows）
+
+先把使用者給的值寫進 `$SP\settings.json`（UTF-8 無 BOM），**不要猜內部網址**，不知道就問：
+
+| 整合 | settings.json | 前置條件 | 啟用 |
+|------|------|------|------|
+| 通知 / 待辦 / 筆記 | `ntfy.url`（選填，手機推播） | 無 | 預設已開；`& "$SP\notify.ps1" "訊息" [-Todo|-Note]` |
+| Azure DevOps | `devops.org`（必填）、`project`、`types` | Azure CLI 已 `az login` | `& "$SP\devops-tasks.ps1"` 驗證 → 加 `-Install` 建排程；頁面 ⚙ 開 DevOps，再「＋ 新增區塊 → DevOps Task」 |
+| Outlook 行事曆 | `calendar.ewsUrl`（必填，如 `https://mail.公司/EWS/Exchange.asmx`） | 網域登入的 Windows | `& "$SP\calendar-sync.ps1"` 驗證 → 加 `-Install` 建排程；頁面 ⚙ 開行事曆 |
+
+- 先手動跑一次，看 `devops.js` / `calendar.js` 的 `error` 欄位；有錯先處理再 `-Install`。
+- `-Install` 會建立 Windows 工作排程（StartPage DevOps Tasks / StartPage Calendar），建立前先告知使用者。
+- calendar-sync 第一次會從 NuGet 下載 EWS DLL 到 `$SP\lib\`；公司網路擋 NuGet 時，請使用者手動放 DLL 並設 `calendar.ewsDll`。
 
 ---
 
@@ -108,7 +133,7 @@ description: >
 完成後回報：
 
 ```markdown
-## myIndex 已安裝
+## StartPage 已安裝
 - 位置：<index.html 路徑>
 - 網址：<file:/// 網址>
 - 預設內容：<無 / 已從 N 個書籤資料夾產生 config.js>
@@ -125,7 +150,11 @@ description: >
 
 - **編輯模式**：右上角「✎ 編輯」→ 按鈕變「✓ 完成」；按 Esc 或「✓ 完成編輯」結束
 - **連結**：網址或本地路徑都可（`D:\資料夾`、`\\server\share\檔.xlsx`）；本地路徑有 ⧉ 可複製路徑
-- **圖示**：編輯連結時「圖示」欄可填 emoji、圖片網址或本地圖檔；留空自動抓 favicon
+- **圖示**：編輯連結時「圖示」欄可填 emoji、圖片網址或本地圖檔；留空 = 字母圖示（⚙ 設定開 favicon 才會自動抓網站圖示）
+- **常用列**：滑到連結點 ☆，會出現在搜尋列下方「★ 常用」，所有分頁都看得到
+- **筆記**：支援 Markdown（標題、清單、- [ ] 勾選、表格、程式碼）；點一下編輯，點外面切回顯示；網址與 `D:\…` 路徑自動變連結
+- **待辦提醒**：輸入「14:30 開會」自動設提醒；或滑到待辦點 ⏰；到時間跳桌面通知並記到 🔔
+- **區塊顏色**：編輯模式點區塊標題列的 🎨
 - **排序**：編輯模式拖 `⋮⋮`，連結可跨區塊，區塊拖標題列；藍線為落點
 - **移到其他分頁**：編輯模式把區塊標題列或連結**拖到上方分頁標籤**（虛線框）放開；或按區塊的 ⇄ 選分頁；或連結 ✎ 的「所在區塊（分頁 / 區塊）」下拉
 - **分頁**：編輯模式下「＋ 分頁」新增、雙擊改名、✕ 刪除
@@ -137,7 +166,7 @@ description: >
 
 ## 注意事項
 
-- 本 skill 只會寫入安裝資料夾（index.html、config.js、.bak、預設內容 JSON），不改瀏覽器設定、登錄檔或書籤。
+- 本 skill 只會寫入安裝資料夾（index.html、config.js、options.js、settings.json、整合腳本、.bak、預設內容 JSON）與使用者同意建立的工作排程，不改瀏覽器設定、登錄檔或書籤。
 - 不要直接讀寫瀏覽器 localStorage 檔案；使用者資料一律透過頁面的匯入/匯出處理。
 - Canonical template: `assets/index.html`. Keep the repository self-contained; no Hub access is required.
 

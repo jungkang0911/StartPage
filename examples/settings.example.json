@@ -1,0 +1,15 @@
+{
+  "calendar": {
+    "ewsUrl": "",
+    "days": 7,
+    "ewsDll": ""
+  },
+  "devops": {
+    "org": "",
+    "project": "",
+    "types": ["Task"]
+  },
+  "ntfy": {
+    "url": ""
+  }
+}
