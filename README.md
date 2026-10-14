@@ -130,6 +130,10 @@ window.STARTPAGE_OPTIONS = {
 
 ## 整合功能（選用）
 
+![行事曆、DevOps 工作項與通知整合（虛構資料）](docs/images/integrations-demo.png)
+
+開啟行事曆後，時鐘下方會顯示進行中或下一場會議；開了 `calendarStrip` 的話，常用列下方還會顯示 1~3 天的行程。DevOps 區塊會依專案分組列出指派給你的未結工作項，過期的到期日標成紅色。右上角 🔔 會累積各種通知。
+
 整合腳本都會寫一個 `.js` 檔到安裝資料夾，頁面定時重新讀取。因為 `file://` 頁面不能用 fetch，所以改用 `<script>` 載入。設定寫在同資料夾的 `settings.json`（範本：[examples/settings.example.json](examples/settings.example.json)）：
 
 ```json
@@ -153,6 +157,8 @@ window.STARTPAGE_OPTIONS = {
 & "$env:USERPROFILE\StartPage\notify.ps1" "回覆週報" -Todo          # 加到待辦清單
 & "$env:USERPROFILE\StartPage\notify.ps1" "會議紀錄：D:\Notes\a.md" -Note   # 附加到筆記
 ```
+
+<img src="docs/images/notifications.png" alt="通知中心" width="420">
 
 `-Priority min|low` 只記錄、不跳通知；`high|urgent` 的通知不會自動消失。`settings.json` 填了 `ntfy.url` 的話，會同時推播到 [ntfy](https://ntfy.sh)，手機也收得到。
 
@@ -236,6 +242,7 @@ scripts/web-install.ps1           Windows 一行安裝
 scripts/install.ps1               Windows 安裝／更新
 scripts/install.sh                macOS／Linux 安裝
 scripts/bookmarks-to-config.ps1   書籤轉預設內容
+scripts/*.cjs, encode-demo.py     產生 README 截圖與 GIF（虛構資料）
 integrations/notify.ps1           通知／待辦／筆記
 integrations/devops-tasks.ps1     Azure DevOps 工作項
 integrations/calendar-sync.ps1    Outlook 行事曆
