@@ -14,3 +14,10 @@ calendar.js
 ntfy.txt
 lib/
 *.tmp
+
+# GitHub Pages 線上試用（虛構資料）
+!docs/config.js
+!docs/options.js
+!docs/inbox.js
+!docs/devops.js
+!docs/calendar.js

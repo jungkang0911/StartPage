@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StartPage</title>
+<style>
+:root{
+  --bg:#eef1f5; --panel:#ffffff; --text:#1f2937; --muted:#6b7280; --border:#e5e7eb;
+  --accent:#2563eb; --accent-weak:#dbeafe; --danger:#dc2626; --shadow:0 1px 3px rgba(0,0,0,.08);
+}
+body.dark{
+  --bg:#111827; --panel:#1f2937; --text:#e5e7eb; --muted:#9ca3af; --border:#374151;
+  --accent:#60a5fa; --accent-weak:#1e3a5f; --shadow:0 1px 3px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+button{font:inherit;cursor:pointer}
+input,textarea,select{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:6px 8px}
+
+/* Top bar */
+header{display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.logo{font-weight:700;font-size:18px;color:var(--accent);white-space:nowrap}
+.tabs{display:flex;gap:4px;overflow-x:auto;flex:1}
+.tab{padding:6px 14px;border-radius:6px;border:none;background:transparent;color:var(--muted);white-space:nowrap}
+.tab.active{background:var(--accent-weak);color:var(--accent);font-weight:600}
+.tab .x{margin-left:6px;opacity:.6;display:none}
+body.editing .tab .x{display:inline}
+.tab.drag-over{outline:2px dashed var(--accent);color:var(--accent)}
+.tool{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:6px;padding:6px 10px}
+.tool:hover{border-color:var(--accent)}
+.tool.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.edit-bar{display:none;align-items:center;justify-content:center;gap:12px;padding:8px 20px;background:var(--accent-weak);color:var(--accent);border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap}
+body.editing .edit-bar{display:flex}
+.edit-bar button{border:none;background:var(--accent);color:#fff;border-radius:6px;padding:4px 14px}
+
+/* Hero: clock + search */
+.hero{text-align:center;padding:28px 20px 10px}
+.clock{font-size:42px;font-weight:300;letter-spacing:1px}
+.date{color:var(--muted);margin-bottom:16px}
+.search{display:flex;max-width:640px;margin:0 auto;box-shadow:var(--shadow);border-radius:8px;overflow:hidden}
+.search select{border:none;border-right:1px solid var(--border);border-radius:0}
+.search input{flex:1;border:none;border-radius:0;padding:12px;font-size:16px}
+.search input:focus{outline:none}
+.search button{border:none;background:var(--accent);color:#fff;padding:0 18px}
+
+/* 通知中心（右上 🔔） */
+.bell{position:relative}
+.bell .badge{position:absolute;top:-7px;right:-7px;background:var(--danger);color:#fff;border-radius:999px;font-size:11px;min-width:18px;height:18px;line-height:18px;padding:0 5px;text-align:center;font-weight:700}
+.npanel{position:fixed;top:58px;right:16px;width:min(380px,calc(100vw - 32px));max-height:72vh;overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.2);z-index:60;display:none}
+.npanel.show{display:block}
+.npanel h4{margin:0;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel)}
+.npanel h4 button{border:none;background:none;color:var(--accent);font-size:12px;padding:2px 6px}
+.nperm{margin:10px 14px;padding:8px 10px;border-radius:8px;background:var(--accent-weak);color:var(--text);font-size:12px;line-height:1.6}
+.nperm button{border:none;background:var(--accent);color:#fff;border-radius:6px;padding:3px 10px;margin-right:6px}
+.nsec{padding:8px 14px 4px;font-size:12px;color:var(--muted);font-weight:600}
+.nitem{padding:8px 14px;border-bottom:1px solid var(--border);cursor:pointer;word-break:break-word}
+.nitem:hover{background:var(--accent-weak)}
+.nitem.unread{border-left:3px solid var(--accent);padding-left:11px}
+.nitem .t{font-size:12px;color:var(--muted);margin-top:2px}
+.nempty{padding:14px;color:var(--muted);font-size:13px;text-align:center}
+.nstat{padding:8px 14px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);line-height:1.8}
+.nstat button{border:1px solid var(--border);background:none;color:var(--accent);border-radius:6px;padding:1px 8px;margin-left:4px}
+.todo-item .due{font-size:12px;color:var(--muted);white-space:nowrap;cursor:pointer}
+.todo-item .due.overdue{color:var(--danger)}
+.todo-item .remind{opacity:0}
+.todo-item:hover .remind{opacity:1}
+
+/* 常用（加星號的連結，跨分頁顯示） */
+.favs{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;max-width:960px;margin:16px auto 0;padding:0 20px}
+.favs-label{color:#f59e0b;font-size:13px;font-weight:600}
+.fav-hint{color:var(--muted);font-size:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--panel);border:1px solid var(--border);border-radius:999px;color:var(--text);text-decoration:none;box-shadow:var(--shadow);max-width:220px}
+.pill:hover{border-color:var(--accent);color:var(--accent)}
+.pill .pname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill img,.pill .fav{width:16px;height:16px;flex:none;border-radius:3px}
+.pill .fav{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-size:10px;font-weight:700}
+.pill .fav.local{background:none;font-size:14px}
+.pill .unstar{display:none;border:none;background:none;color:var(--muted);padding:0 0 0 2px}
+body.editing .pill .unstar{display:inline}
+.pill .unstar:hover{color:var(--danger)}
+.link .star{border:none;background:none;color:var(--muted);padding:0 3px;opacity:0;font-size:14px;line-height:1}
+.link:hover .star{opacity:1}
+.link .star:hover{color:#f59e0b}
+.link .star.on{opacity:1;color:#f59e0b}
+
+/* Board */
+/* 瀑布流：列高 1px，每個區塊依實際高度跨列（見 boardRO），上下不留空白 */
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));grid-auto-rows:1px;column-gap:16px;row-gap:0;padding:20px;align-items:start}
+.widget{background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
+.widget.drag-over{outline:2px dashed var(--accent)}
+.w-head{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid var(--border);font-weight:600}
+.w-head .title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.w-head .act{display:none;border:none;background:none;color:var(--muted);padding:2px 4px}
+body.editing .w-head .act{display:inline}
+.w-head .act:hover{color:var(--accent)}
+.w-head .act.del:hover{color:var(--danger)}
+.collapse{border:none;background:none;color:var(--muted);padding:0 2px}
+.w-body{padding:6px 0}
+/* 區塊底色（編輯模式 🎨 選色）：上緣色條 + 標題列淡色底，深淺色主題都適用 */
+.widget[data-color]{border-top:3px solid var(--wc)}
+.widget[data-color] .w-head{background:color-mix(in srgb,var(--wc) 14%,var(--panel))}
+.widget[data-color] .w-head .title{color:color-mix(in srgb,var(--wc) 70%,var(--text))}
+[data-color=blue]{--wc:#3b82f6}[data-color=green]{--wc:#22c55e}[data-color=amber]{--wc:#f59e0b}[data-color=red]{--wc:#ef4444}
+[data-color=purple]{--wc:#8b5cf6}[data-color=teal]{--wc:#14b8a6}[data-color=pink]{--wc:#ec4899}[data-color=gray]{--wc:#94a3b8}
+.swatches{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.swatch{width:34px;height:34px;border-radius:8px;border:2px solid var(--border);background:var(--wc,var(--panel));position:relative}
+.swatch.on{outline:3px solid var(--accent);outline-offset:2px}
+.swatch.none::after{content:"✕";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.widget.collapsed .w-body{display:none}
+
+.link{display:flex;align-items:center;gap:8px;padding:6px 12px;color:var(--text);text-decoration:none}
+.link:hover{background:var(--accent-weak)}
+.link img,.link .fav{width:16px;height:16px;flex:none;border-radius:3px}
+.link .fav{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-size:10px;font-weight:700}
+.link .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.link .ops{display:none;gap:2px}
+body.editing .link .ops{display:flex}
+body.editing .link{cursor:grab}
+.link .ops button{border:none;background:none;color:var(--muted);padding:0 3px}
+.link .ops button:hover{color:var(--accent)}
+.link.dragging,.widget.dragging{opacity:.4}
+.grip{display:none;color:var(--muted);cursor:grab;letter-spacing:-3px;padding-right:3px;user-select:none}
+body.editing .grip{display:inline}
+body.editing .w-head{cursor:grab}
+.link img{pointer-events:none}
+.link.drop-before{box-shadow:inset 0 3px 0 var(--accent)}
+.link.drop-after{box-shadow:inset 0 -3px 0 var(--accent)}
+.widget.drop-before{box-shadow:-5px 0 0 var(--accent)}
+.widget.drop-after{box-shadow:5px 0 0 var(--accent)}
+.add-link{display:none;margin:4px 12px 6px;border:1px dashed var(--border);background:none;color:var(--muted);border-radius:6px;padding:4px;width:calc(100% - 24px)}
+body.editing .add-link{display:block}
+.empty{color:var(--muted);padding:8px 12px;font-size:13px}
+
+.notes textarea{width:calc(100% - 24px);margin:6px 12px;min-height:120px;resize:vertical;font-family:Consolas,"Microsoft JhengHei",monospace;font-size:13px}
+.notes .md-hint{padding:0 12px 4px;font-size:11px;color:var(--muted)}
+/* 筆記 Markdown 顯示（點一下進入編輯，離開自動切回顯示） */
+.md{padding:4px 12px 8px;min-height:60px;cursor:text;line-height:1.6;word-break:break-word}
+.md:hover{background:color-mix(in srgb,var(--accent-weak) 40%,transparent)}
+.md.empty-md{color:var(--muted);font-size:13px}
+.md>:first-child{margin-top:2px}.md>:last-child{margin-bottom:0}
+.md h1,.md h2,.md h3,.md h4{margin:10px 0 4px;line-height:1.3}
+.md h1{font-size:18px}.md h2{font-size:16px}.md h3{font-size:15px}.md h4{font-size:14px;color:var(--muted)}
+.md p{margin:4px 0}
+.md ul,.md ol{margin:4px 0;padding-left:22px}
+.md li.task{list-style:none;margin-left:-20px}
+.md li.task input{margin:0 6px 0 0;vertical-align:-2px;cursor:pointer}
+.md li.task.done>span{text-decoration:line-through;color:var(--muted)}
+.md code{font-family:Consolas,monospace;font-size:12.5px;background:var(--accent-weak);padding:1px 4px;border-radius:4px}
+.md pre{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;overflow:auto;margin:6px 0}
+.md pre code{background:none;padding:0}
+.md blockquote{margin:6px 0;padding:2px 10px;border-left:3px solid var(--accent);color:var(--muted)}
+.md hr{border:none;border-top:1px solid var(--border);margin:8px 0}
+.md a{color:var(--accent);text-decoration:none}
+.md a:hover{text-decoration:underline}
+.md a.path{word-break:break-all}
+.md table{border-collapse:collapse;margin:6px 0;font-size:13px}
+.md th,.md td{border:1px solid var(--border);padding:3px 8px;text-align:left}
+.md th{background:var(--accent-weak)}
+.todo-item{display:flex;align-items:center;gap:8px;padding:4px 12px}
+.todo-item.done span{text-decoration:line-through;color:var(--muted)}
+.todo-item span{flex:1}
+.todo-item button{border:none;background:none;color:var(--muted)}
+.todo-add{display:flex;gap:6px;padding:6px 12px}
+.todo-add input{flex:1}
+
+/* DevOps Task 區塊（資料來自 devops-tasks.ps1 產生的 devops.js） */
+.dmeta{display:flex;align-items:center;gap:6px;padding:2px 12px 6px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.dmeta .err{color:var(--danger)}
+.dmeta select{padding:1px 4px;font-size:12px}
+.dgroup{padding:6px 12px 2px;font-size:12px;font-weight:600;color:var(--accent)}
+.dtask{display:block;padding:5px 12px;color:var(--text);text-decoration:none;border-left:3px solid transparent}
+.dtask:hover{background:var(--accent-weak);border-left-color:var(--accent)}
+.dtask .dt{display:flex;gap:6px;align-items:baseline}
+.dtask .did{color:var(--muted);font-size:12px;flex:none}
+.dtask .dname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dtask .dstate{flex:none;font-size:11px;padding:0 6px;border-radius:999px;background:var(--accent-weak);color:var(--accent)}
+.dtask .dstate.new{background:var(--border);color:var(--muted)}
+.dtask .dsub{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:2px}
+.dtask .ddue.overdue{color:var(--danger);font-weight:600}
+
+/* 行事曆：時鐘下方「下一場」倒數 + 常用列下方橫向 1~3 天（資料來自 calendar-sync.ps1 產生的 calendar.js） */
+.cnext{display:inline-flex;align-items:center;gap:8px;margin:-6px 0 14px;padding:4px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--border);box-shadow:var(--shadow);font-size:13px;max-width:min(640px,100%)}
+.cnext .cn-sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cnext.now{border-color:var(--danger)}
+.cnext .cn-tag{flex:none;font-weight:600;color:var(--accent)}
+.cnext.now .cn-tag,.cnext.soon .cn-tag{color:var(--danger)}
+.calstrip{max-width:1200px;margin:16px auto 0;padding:0 20px}
+.calstrip-in{background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
+.cal-head{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);font-weight:600}
+.cal-head .title{flex:1}
+.cal-head .seg{display:inline-flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;font-weight:400}
+.cal-head .seg button{border:none;background:none;color:var(--muted);padding:2px 10px;font-size:12px}
+.cal-head .seg button.on{background:var(--accent);color:#fff}
+.cal-head .cmeta{font-size:12px;color:var(--muted);font-weight:400}
+.cal-head .cmeta a{color:var(--accent)}
+.cal-head .cmeta .err{color:var(--danger)}
+.calstrip.collapsed .cal-days{display:none}
+.calstrip.collapsed .cal-head{border-bottom:none}
+.cal-days{display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1fr))}
+.cal-col{padding:6px 0 8px;border-left:1px solid var(--border);min-width:0}
+.cal-col:first-child{border-left:none}
+.cal-col.today{background:linear-gradient(var(--accent-weak),transparent 60px)}
+.cday{padding:2px 12px 6px;font-size:13px;font-weight:600;color:var(--muted)}
+.cal-col.today .cday{color:var(--accent)}
+.cev{display:flex;gap:8px;padding:4px 12px;border-left:3px solid transparent}
+.cev .ctime{flex:none;width:84px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:1px}
+.cev .cbody{flex:1;min-width:0}
+.cev .csub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cev .cloc{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cev.past{opacity:.45}
+.cev.now{border-left-color:var(--danger);background:var(--accent-weak)}
+.cev.next{border-left-color:var(--accent)}
+.cev.tentative .csub::after{content:" （未回覆）";font-size:11px;color:var(--muted)}
+.cev .cnow{font-size:11px;color:var(--danger);font-weight:600;margin-left:4px}
+.cal-empty{padding:4px 12px;color:var(--muted);font-size:13px}
+@media (max-width:760px){.cal-days{grid-template-columns:1fr}.cal-col{border-left:none;border-top:1px solid var(--border)}.cal-col:first-child{border-top:none}}
+
+.add-widget{display:none;min-height:80px;border:2px dashed var(--border);border-radius:10px;background:none;color:var(--muted);font-size:15px}
+body.editing .add-widget{display:block}
+
+.link .fav.local{background:none;font-size:14px}
+.link .copy{border:none;background:none;color:var(--muted);padding:0 3px;opacity:0}
+.link:hover .copy{opacity:1}
+.link .copy:hover{color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:8px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:.2s;z-index:200;max-width:90vw;word-break:break-all}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+/* Modal */
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:100}
+.mask.show{display:flex}
+.modal{background:var(--panel);border-radius:10px;padding:20px;width:min(440px,92vw);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.modal h3{margin:0 0 14px}
+.modal label{display:block;margin:10px 0 4px;color:var(--muted);font-size:13px}
+.modal input,.modal select,.modal textarea{width:100%}
+.modal .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.modal .primary{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:7px 16px}
+.modal .secondary{background:none;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 16px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">★ StartPage</div>
+  <nav class="tabs" id="tabs"></nav>
+  <button class="tool bell" id="btnBell" title="通知">🔔<span class="badge" id="badge" hidden></span></button>
+  <button class="tool" id="btnEdit" title="編輯模式">✎ 編輯</button>
+  <button class="tool" id="btnTheme" title="切換深色/淺色">◐</button>
+  <button class="tool" id="btnMenu" title="匯入 / 匯出">⋯</button>
+</header>
+<div class="npanel" id="npanel"></div>
+<div class="edit-bar">
+  <span>✎ 編輯模式中：拖曳 ⋮⋮ 可排序連結（可跨區塊）與區塊標題列，拖到上方分頁可移過去、新增/刪除區塊與分頁（雙擊分頁可改名）。所有變更已自動儲存。</span>
+  <button id="btnDone">✓ 完成編輯</button>
+  <span style="opacity:.7">或按 Esc</span>
+</div>
+
+<section class="hero">
+  <div class="clock" id="clock"></div>
+  <div class="date" id="date"></div>
+  <div id="calNext"></div>
+  <form class="search" id="searchForm">
+    <select id="engine"></select>
+    <input id="q" placeholder="搜尋，或輸入網址後按 Enter…" autocomplete="off">
+    <button type="submit">搜尋</button>
+  </form>
+</section>
+
+<nav class="favs" id="favs"></nav>
+
+<section class="calstrip" id="calStrip" hidden></section>
+
+<main class="board" id="board"></main>
+
+<!-- Generic modal -->
+<div class="mask" id="mask"><div class="modal" id="modal"></div></div>
+<input type="file" id="fileInput" accept=".json,.html,.htm" hidden>
+<div class="toast" id="toast"></div>
+
+<!-- 選用，沒有這兩個檔不影響使用：
+     config.js  ：window.STARTPAGE_DEFAULT = {...}  首次開啟的預設內容（install.ps1 -Config 產生）
+     options.js ：window.STARTPAGE_OPTIONS = {...}  功能設定預設值（見 examples/options.example.js；頁面「⋯ → ⚙ 設定」可再覆寫） -->
+<script src="config.js"></script>
+<script src="options.js"></script>
+
+<script>
+/* ================= State ================= */
+const KEY = 'startpage.v1';
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+const defaultState = () => ({
+  theme: 'light',
+  engine: 0,
+  current: 0,
+  pages: [{
+    id: uid(), name: '首頁',
+    widgets: [
+      // 範例連結（虛構網址），請在編輯模式換成自己的
+      { id: uid(), type: 'links', title: '常用工具', links: [
+        { id: uid(), name: '團隊 Wiki', url: 'https://wiki.example.com', icon: '📘' },
+        { id: uid(), name: '專案看板', url: 'https://board.example.com', icon: '📋' },
+        { id: uid(), name: '報表中心', url: 'https://reports.example.com', icon: '📊' },
+      ]},
+      { id: uid(), type: 'links', title: '閱讀清單', links: [
+        { id: uid(), name: '技術週報', url: 'https://weekly.example.org', icon: '📰' },
+      ]},
+      { id: uid(), type: 'notes', title: '筆記', text: '在這裡記錄一些事情…\n（自動儲存）' },
+      { id: uid(), type: 'todo', title: '待辦', items: [
+        { id: uid(), text: '點右上角「編輯」開始自訂', done: false },
+      ]},
+    ]
+  }]
+});
+
+let state = load();
+let editing = false;
+
+// 首次開啟時的預設內容：若同資料夾有 config.js（定義 window.STARTPAGE_DEFAULT），以它為準，方便統一派送
+function load() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY));
+    if (saved) return saved;
+  } catch {}
+  return window.STARTPAGE_DEFAULT ? structuredClone(window.STARTPAGE_DEFAULT) : defaultState();
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+
+/* ================= 設定 =================
+   優先順序：頁面「⚙ 設定」（存在 state.settings）> options.js 的 window.STARTPAGE_OPTIONS > 下列預設值
+   外部整合（收件匣 / DevOps / 行事曆）都是讀同資料夾的 .js 檔，由 scripts/ 下的 PowerShell 腳本產生；沒用到就關掉 */
+const DEFAULT_OPTIONS = {
+  title: '★ StartPage',          // 左上角文字
+  favicon: false,              // true：自動向網站抓 /favicon.ico；false：只用字母 / Emoji 圖示（不對外連線）
+  inbox: true,                 // 收件匣通知（notify.ps1 → inbox.js）
+  inboxSec: 10,
+  devops: false,               // Azure DevOps 未結工作項區塊（devops-tasks.ps1 → devops.js）
+  devopsSec: 60,
+  calendar: false,             // Exchange / Outlook 行事曆（calendar-sync.ps1 → calendar.js）
+  calendarSec: 60,
+  calendarRemind: 10,          // 會議前幾分鐘通知
+  calendarStrip: false,        // 常用列下方顯示 1~3 天橫向行事曆（false 只顯示時鐘下方的「下一場」）
+  engines: [
+    ['Google', 'https://www.google.com/search?q='],
+    ['Bing', 'https://www.bing.com/search?q='],
+    ['DuckDuckGo', 'https://duckduckgo.com/?q='],
+    ['GitHub', 'https://github.com/search?q='],
+    ['StackOverflow', 'https://stackoverflow.com/search?q='],
+  ],
+};
+const opt = () => ({ ...DEFAULT_OPTIONS, ...(window.STARTPAGE_OPTIONS || {}), ...(state.settings || {}) });
+
+function copyText(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  document.execCommand('copy'); ta.remove();
+  toast('已複製路徑：' + text);
+}
+
+function toast(msg) {
+  let t = $('#toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 3000);
+}
+const page = () => state.pages[state.current] || state.pages[0];
+const findWidget = id => page().widgets.find(w => w.id === id);
+
+/* ================= Helpers ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// 本地路徑：D:\xxx、\\server\share、file:///…、%USERPROFILE%\…
+const isLocal = u => /^([a-z]:[\\/]|\\\\|file:|%[a-z_]+%)/i.test((u || '').trim());
+function normUrl(u) {
+  u = u.trim().replace(/^"(.*)"$/, '$1');
+  if (!u || isLocal(u)) return u;
+  return /^[a-z][a-z0-9+.-]*:/i.test(u) ? u : 'https://' + u;
+}
+function host(u) { try { return new URL(u).hostname; } catch { return ''; } }
+function baseName(p) { return p.replace(/[\\/]+$/, '').split(/[\\/]/).pop() || p; }
+function displayName(url) { return isLocal(url) ? baseName(url) : (host(url) || url); }
+// Windows 路徑 → file:/// URL（D:\a b → file:///D:/a%20b，\\srv\share → file://srv/share）
+function toFileUrl(p) {
+  p = p.trim();
+  if (/^file:/i.test(p)) return p;
+  const enc = s => s.split('/').map(encodeURIComponent).join('/');
+  if (p.startsWith('\\\\')) return 'file://' + enc(p.slice(2).replace(/\\/g, '/'));
+  return 'file:///' + enc(p.replace(/\\/g, '/')).replace(/^([A-Za-z])%3A/, '$1:');
+}
+function favicon(link) {
+  // 自訂圖示：圖片網址/本地圖檔 → <img>；其他（emoji、文字）→ 直接顯示
+  const ic = (link.icon || '').trim();
+  if (ic) {
+    if (/^(https?:|data:image\/)/i.test(ic) || isLocal(ic))
+      return `<img src="${esc(isLocal(ic) ? toFileUrl(ic) : ic)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`;
+    return `<span class="fav local">${esc([...ic].slice(0, 2).join(''))}</span>`;
+  }
+  if (isLocal(link.url)) {
+    const isFile = /\.[a-z0-9]{1,6}$/i.test(baseName(link.url));
+    return `<span class="fav local">${isFile ? '📄' : '📁'}</span>`;
+  }
+  const h = host(link.url);
+  const letter = esc((link.name || h || '?').trim().charAt(0).toUpperCase());
+  if (!h || !opt().favicon) return `<span class="fav">${letter}</span>`;
+  // 直接抓該站台自己的 /favicon.ico（內網站台也適用、不經過外部服務），抓不到退回字母圖示
+  let origin = ''; try { origin = new URL(link.url).origin; } catch {}
+  return `<img src="${esc(origin)}/favicon.ico" alt="" loading="lazy"
+           onerror="this.outerHTML='<span class=&quot;fav&quot;>${letter}</span>'">`;
+}
+
+/* ================= Render ================= */
+function render() {
+  document.body.classList.toggle('dark', state.theme === 'dark');
+  document.body.classList.toggle('editing', editing);
+  $('#btnEdit').classList.toggle('on', editing);
+  $('#btnEdit').textContent = editing ? '✓ 完成' : '✎ 編輯';
+  $('#btnEdit').title = editing ? '結束編輯模式（Esc）' : '編輯模式';
+  $('.logo').textContent = opt().title;
+  $('#engine').innerHTML = opt().engines.map(([n, u]) => `<option value="${esc(u)}">${esc(n)}</option>`).join('');
+  $('#engine').selectedIndex = Math.min(state.engine || 0, opt().engines.length - 1);
+  renderTabs();
+  renderFavs();
+  renderCal();
+  renderBoard();
+  renderBell();
+}
+
+// 時間格式：今天只顯示時分，其他加月/日
+function fmtTime(ms) {
+  const d = new Date(ms), hm = d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return d.toDateString() === new Date().toDateString() ? hm : `${d.getMonth() + 1}/${d.getDate()} ${hm}`;
+}
+const toLocalInput = ms => new Date(ms - new Date(ms).getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
+// 所有分頁裡加星號的連結
+const starred = () => state.pages.flatMap(p => p.widgets.filter(w => w.type === 'links').flatMap(w => w.links.filter(l => l.star)));
+const findLinkAnywhere = id => state.pages.flatMap(p => p.widgets.filter(w => w.type === 'links').flatMap(w => w.links)).find(l => l.id === id);
+
+function renderFavs() {
+  const favs = starred();
+  $('#favs').innerHTML = favs.length
+    ? `<span class="favs-label">★ 常用</span>` + favs.map(l => `
+      <a class="pill" href="${esc(isLocal(l.url) ? toFileUrl(l.url) : l.url)}" target="_blank" rel="noopener" title="${esc(l.url)}">
+        ${favicon(l)}<span class="pname">${esc(l.name)}</span><button class="unstar" data-unstar="${l.id}" title="從常用移除">✕</button>
+      </a>`).join('')
+    : `<span class="fav-hint">提示：滑到連結上點 ☆，就會出現在這排「常用」，任何分頁都看得到</span>`;
+}
+
+function renderTabs() {
+  const tabs = $('#tabs');
+  tabs.innerHTML = state.pages.map((p, i) =>
+    `<button class="tab ${i === state.current ? 'active' : ''}" data-i="${i}">${esc(p.name)}<span class="x" data-del="${i}" title="刪除分頁">✕</span></button>`
+  ).join('') + (editing ? `<button class="tab" id="addPage">＋ 分頁</button>` : '');
+}
+
+function renderBoard() {
+  const board = $('#board');
+  board.innerHTML = page().widgets.map(widgetHtml).join('') +
+    `<button class="add-widget" id="addWidget">＋ 新增區塊</button>`;
+  boardRO.disconnect();
+  [...board.children].forEach(el => boardRO.observe(el));   // observe 時會先觸發一次 → 算出跨列數
+}
+
+// 瀑布流：依區塊實際高度設定跨幾列（列高 1px + 區塊間距 16px）；高度變動（收合、加連結、拉大筆記）自動重算
+const ROW_H = 1, BOARD_GAP = 16;
+const boardRO = new ResizeObserver(entries => {
+  for (const { target } of entries)
+    target.style.gridRowEnd = `span ${Math.ceil((target.offsetHeight + BOARD_GAP) / ROW_H)}`;
+});
+
+function widgetHtml(w) {
+  let body = '';
+  if (w.type === 'links') {
+    body = (w.links.length ? w.links.map(l => `
+      <a class="link" href="${esc(isLocal(l.url) ? toFileUrl(l.url) : l.url)}" target="_blank" rel="noopener" draggable="${editing}" data-lid="${l.id}" data-wid="${w.id}" title="${esc(l.url)}">
+        <span class="grip">⋮⋮</span>${favicon(l)}<span class="name">${esc(l.name)}</span>
+        <button class="star ${l.star ? 'on' : ''}" data-act="star" title="${l.star ? '從常用移除' : '加入常用'}">${l.star ? '★' : '☆'}</button>
+        ${isLocal(l.url) ? `<button class="copy" data-act="copyPath" title="複製路徑（可貼到檔案總管 / Win+R）">⧉</button>` : ''}
+        <span class="ops"><button data-act="editLink" title="編輯">✎</button><button data-act="delLink" title="刪除">✕</button></span>
+      </a>`).join('') : `<div class="empty">尚無連結</div>`) +
+      `<button class="add-link" data-act="addLink">＋ 新增連結</button>`;
+  } else if (w.type === 'notes') {
+    body = editingNote === w.id
+      ? `<div class="notes"><textarea data-notes="${w.id}">${esc(w.text)}</textarea><div class="md-hint">支援 Markdown：# 標題、**粗體**、- 清單、- [ ] 勾選、\`code\`、[文字](網址)、表格；點區塊外結束編輯</div></div>`
+      : `<div class="notes">${(w.text || '').trim()
+          ? `<div class="md" data-mdview="${w.id}" title="點一下編輯">${renderMd(w.text)}</div>`
+          : `<div class="md empty-md" data-mdview="${w.id}">點此輸入筆記…（支援 Markdown）</div>`}</div>`;
+  } else if (w.type === 'todo') {
+    body = w.items.map(t => `
+      <div class="todo-item ${t.done ? 'done' : ''}">
+        <input type="checkbox" data-todo="${t.id}" ${t.done ? 'checked' : ''}>
+        <span>${esc(t.text)}</span>
+        ${t.remindAt ? `<span class="due ${!t.done && t.remindAt < Date.now() ? 'overdue' : ''}" data-act="remindTodo" data-tid="${t.id}" title="修改提醒">⏰ ${fmtTime(t.remindAt)}</span>`
+                     : `<button class="remind" data-act="remindTodo" data-tid="${t.id}" title="設定提醒">⏰</button>`}
+        <button data-act="delTodo" data-tid="${t.id}" title="刪除">✕</button>
+      </div>`).join('') +
+      `<form class="todo-add" data-todoform="${w.id}"><input placeholder="新增待辦（「14:30 開會」會自動提醒）"><button class="tool">＋</button></form>`;
+  } else if (w.type === 'devops') {
+    body = devopsHtml(w);
+  }
+  return `
+  <section class="widget ${w.collapsed ? 'collapsed' : ''}" data-wid="${w.id}"${w.color ? ` data-color="${esc(w.color)}"` : ''}>
+    <div class="w-head" draggable="${editing}">
+      <span class="grip" title="拖曳移動區塊">⋮⋮</span>
+      <button class="collapse" data-act="collapse">${w.collapsed ? '▸' : '▾'}</button>
+      <span class="title">${esc(w.title)}</span>
+      <button class="act" data-act="colorWidget" title="區塊顏色">🎨</button>
+      <button class="act" data-act="moveL" title="左移">◀</button>
+      <button class="act" data-act="moveR" title="右移">▶</button>
+      <button class="act" data-act="editWidget" title="重新命名">✎</button>
+      <button class="act" data-act="moveWidget" title="移到其他分頁">⇄</button>
+      <button class="act del" data-act="delWidget" title="刪除區塊">✕</button>
+    </div>
+    <div class="w-body">${body}</div>
+  </section>`;
+}
+
+/* ================= Modal ================= */
+function modal(title, fields, onOk, okText = '確定') {
+  const m = $('#modal');
+  m.innerHTML = `<h3>${esc(title)}</h3>` + fields.map(f => {
+    if (f.type === 'select') return `<label>${esc(f.label)}</label><select name="${f.name}">${f.options.map(o => `<option value="${esc(o[0])}"${o[0] === f.value ? ' selected' : ''}>${esc(o[1])}</option>`).join('')}</select>`;
+    if (f.type === 'info') return `<div style="color:var(--muted);font-size:13px;line-height:1.6">${f.html}</div>`;
+    if (f.type === 'button') return `<button class="secondary" style="width:100%;margin-top:8px" data-mbtn="${f.name}">${esc(f.label)}</button>`;
+    return `<label>${esc(f.label)}</label><input type="${f.inputType || 'text'}" name="${f.name}" value="${esc(f.value || '')}" placeholder="${esc(f.placeholder || '')}">`;
+  }).join('') + `<div class="btns"><button class="secondary" data-close>取消</button>${onOk ? `<button class="primary" data-ok>${esc(okText)}</button>` : ''}</div>`;
+  $('#mask').classList.add('show');
+  const first = m.querySelector('input,select'); first && first.focus();
+  const close = () => $('#mask').classList.remove('show');
+  m.querySelector('[data-close]').onclick = close;
+  fields.filter(f => f.type === 'button').forEach(f => m.querySelector(`[data-mbtn="${f.name}"]`).onclick = () => { close(); f.onClick(); });
+  const ok = () => {
+    const vals = {};
+    m.querySelectorAll('[name]').forEach(el => vals[el.name] = el.value);
+    if (onOk(vals) !== false) { close(); save(); render(); }
+  };
+  if (onOk) {
+    m.querySelector('[data-ok]').onclick = ok;
+    m.onkeydown = e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') ok(); };
+  }
+}
+
+/* ================= Events ================= */
+// Clock
+function tick() {
+  const d = new Date();
+  $('#clock').textContent = d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
+  $('#date').textContent = d.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+}
+tick(); setInterval(tick, 1000);
+
+// Search
+$('#engine').onchange = e => { state.engine = e.target.selectedIndex; save(); };
+$('#searchForm').onsubmit = e => {
+  e.preventDefault();
+  const q = $('#q').value.trim();
+  if (!q) return;
+  const looksUrl = /^(https?:\/\/)?[\w-]+(\.[\w-]+)+(:\d+)?(\/\S*)?$/i.test(q) && !q.includes(' ');
+  location.href = looksUrl ? normUrl(q) : $('#engine').value + encodeURIComponent(q);
+};
+
+// Top tools
+$('#btnEdit').onclick = () => { editing = !editing; render(); };
+$('#btnDone').onclick = () => { editing = false; render(); };
+// Esc 結束編輯（對話框開著時交給對話框自己處理）
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if ($('#mask').classList.contains('show')) { $('#mask').classList.remove('show'); return; }
+  if (editing) { editing = false; render(); }
+});
+$('#btnTheme').onclick = () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; save(); render(); };
+$('#btnMenu').onclick = () => modal('匯入 / 匯出', [
+  { type: 'info', html: '資料存在此瀏覽器的 localStorage。換電腦或清除瀏覽資料前請先匯出備份。<br>匯出的 JSON 改名為 config.js 並在開頭加上 <code>window.STARTPAGE_DEFAULT = </code>，即可當成同仁的預設內容派送。<br>匯入：完整設定檔（含 pages）會取代全部；只含 widgets 的 JSON 或書籤 HTML 會併入目前分頁。' },
+  { type: 'button', name: 'set', label: '⚙ 設定（標題、圖示、整合功能）', onClick: openSettings },
+  { type: 'button', name: 'exp', label: '⬇ 匯出設定 (JSON)', onClick: exportJson },
+  { type: 'button', name: 'imp', label: '⬆ 匯入設定 (JSON) / 瀏覽器書籤 (HTML)', onClick: () => $('#fileInput').click() },
+  { type: 'button', name: 'reset', label: '↺ 重設為預設內容', onClick: () => { if (confirm('確定清除所有自訂內容？')) { localStorage.removeItem(KEY); state = load(); save(); render(); } } },
+], null);
+
+// ⚙ 設定：存到 state.settings（跟著匯出 / 匯入走）；留空或選「預設」= 用 config.js / 內建預設
+function openSettings() {
+  const o = opt(), onOff = (name, label, v) => ({ type: 'select', name, label, value: v ? '1' : '0', options: [['1', '開啟'], ['0', '關閉']] });
+  modal('設定', [
+    { name: 'title', label: '左上角標題', value: o.title },
+    onOff('favicon', '自動抓網站 favicon（關閉＝只用字母 / Emoji，不對外連線）', o.favicon),
+    onOff('inbox', '收件匣通知（notify.ps1 → inbox.js）', o.inbox),
+    onOff('devops', 'Azure DevOps 工作項（devops-tasks.ps1 → devops.js）', o.devops),
+    onOff('calendar', 'Outlook 行事曆（calendar-sync.ps1 → calendar.js）', o.calendar),
+    onOff('calendarStrip', '行事曆：常用列下方顯示 1~3 天', o.calendarStrip),
+    { name: 'calendarRemind', inputType: 'number', label: '會議前幾分鐘通知', value: String(o.calendarRemind) },
+    { type: 'info', html: '整合功能需要先在安裝資料夾設定 <code>settings.json</code> 並執行對應腳本，詳見 README。' },
+    { type: 'button', name: 'reset', label: '↺ 設定恢復預設', onClick: () => { delete state.settings; save(); location.reload(); } },
+  ], v => {
+    state.settings = {
+      ...(state.settings || {}),
+      title: v.title.trim() || DEFAULT_OPTIONS.title,
+      favicon: v.favicon === '1', inbox: v.inbox === '1', devops: v.devops === '1',
+      calendar: v.calendar === '1', calendarStrip: v.calendarStrip === '1',
+      calendarRemind: Math.max(0, +v.calendarRemind || DEFAULT_OPTIONS.calendarRemind),
+    };
+    save(); location.reload();   // 重新載入以套用輪詢開關
+  }, '儲存');
+}
+
+// Tabs
+$('#tabs').onclick = e => {
+  const del = e.target.closest('[data-del]');
+  if (del) {
+    e.stopPropagation();
+    const i = +del.dataset.del;
+    if (state.pages.length === 1) return alert('至少要保留一個分頁');
+    if (!confirm(`刪除分頁「${state.pages[i].name}」？`)) return;
+    state.pages.splice(i, 1);
+    state.current = Math.min(state.current, state.pages.length - 1);
+    save(); render(); return;
+  }
+  if (e.target.id === 'addPage') {
+    return modal('新增分頁', [{ name: 'name', label: '分頁名稱', placeholder: '例如：工作' }], v => {
+      if (!v.name.trim()) return false;
+      state.pages.push({ id: uid(), name: v.name.trim(), widgets: [] });
+      state.current = state.pages.length - 1;
+    });
+  }
+  const tab = e.target.closest('.tab[data-i]');
+  if (tab) { state.current = +tab.dataset.i; save(); render(); }
+};
+$('#tabs').ondblclick = e => {
+  const tab = e.target.closest('.tab[data-i]');
+  if (!tab || !editing) return;
+  const p = state.pages[+tab.dataset.i];
+  modal('重新命名分頁', [{ name: 'name', label: '分頁名稱', value: p.name }], v => { if (!v.name.trim()) return false; p.name = v.name.trim(); });
+};
+
+// Board clicks
+$('#board').onclick = e => {
+  if (e.target.id === 'addWidget') {
+    return modal('新增區塊', [
+      { name: 'title', label: '標題', placeholder: '例如：專案連結' },
+      { type: 'select', name: 'type', label: '類型', options: [['links', '書籤清單'], ['notes', '筆記'], ['todo', '待辦清單'], ...(opt().devops ? [['devops', 'DevOps Task（我的未結工作項）']] : [])] },
+    ], v => {
+      const w = { id: uid(), type: v.type, title: v.title.trim() || (v.type === 'devops' ? 'DevOps Task' : '未命名') };
+      if (v.type === 'links') w.links = [];
+      if (v.type === 'notes') w.text = '';
+      if (v.type === 'todo') w.items = [];
+      page().widgets.push(w);
+    });
+  }
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  e.preventDefault();
+  const wEl = btn.closest('.widget');
+  const w = findWidget(wEl.dataset.wid);
+  const ws = page().widgets;
+  const idx = ws.indexOf(w);
+  const linkEl = btn.closest('.link');
+  const link = linkEl && w.links.find(l => l.id === linkEl.dataset.lid);
+
+  switch (btn.dataset.act) {
+    case 'collapse': w.collapsed = !w.collapsed; break;
+    case 'moveL': if (idx > 0) [ws[idx - 1], ws[idx]] = [ws[idx], ws[idx - 1]]; break;
+    case 'moveR': if (idx < ws.length - 1) [ws[idx + 1], ws[idx]] = [ws[idx], ws[idx + 1]]; break;
+    case 'delWidget': if (!confirm(`刪除區塊「${w.title}」？`)) return; ws.splice(idx, 1); break;
+    case 'colorWidget': {
+      const names = { '': '預設', blue: '藍', green: '綠', amber: '橘黃', red: '紅', purple: '紫', teal: '青綠', pink: '粉紅', gray: '灰' };
+      modal(`區塊顏色：${w.title}`, [{ type: 'info', html: `<div class="swatches">${Object.entries(names).map(([c, n]) =>
+        `<button class="swatch ${c ? '' : 'none'} ${(w.color || '') === c ? 'on' : ''}" ${c ? `data-color="${c}"` : ''} data-pick="${c}" title="${n}"></button>`).join('')}</div>` }], null);
+      $('#modal').querySelectorAll('[data-pick]').forEach(b => b.onclick = () => {
+        if (b.dataset.pick) w.color = b.dataset.pick; else delete w.color;
+        $('#mask').classList.remove('show'); save(); render();
+      });
+      return;
+    }
+    case 'editWidget':
+      return modal('重新命名區塊', [{ name: 'title', label: '標題', value: w.title }], v => { w.title = v.title.trim() || w.title; });
+    case 'moveWidget': {
+      const others = state.pages.filter(p => p !== page());
+      if (!others.length) return alert('沒有其他分頁，請先「＋ 分頁」');
+      return modal(`移動區塊「${w.title}」`, [
+        { type: 'select', name: 'to', label: '移到分頁', options: others.map(p => [p.id, p.name]) },
+      ], v => {
+        ws.splice(idx, 1);
+        state.pages.find(p => p.id === v.to).widgets.push(w);
+      });
+    }
+    case 'addLink':
+      return modal('新增連結', [
+        { name: 'url', label: '網址或本地路徑', placeholder: 'https://…　或　D:\\資料夾　或　\\\\server\\share\\檔案.xlsx' },
+        { name: 'name', label: '名稱（可留空）' },
+        { name: 'icon', label: '圖示（可留空＝自動）', placeholder: '🚀　或　https://…/logo.png　或　D:\\icons\\a.png' },
+      ], v => {
+        const url = normUrl(v.url);
+        if (!url) return false;
+        const l = { id: uid(), url, name: v.name.trim() || displayName(url) };
+        if (v.icon.trim()) l.icon = v.icon.trim();
+        w.links.push(l);
+      });
+    case 'editLink': {
+      // 所在區塊：可選任何分頁的書籤清單，用來把連結移到其他分頁 / 區塊
+      const dests = state.pages.flatMap(p => p.widgets.filter(x => x.type === 'links').map(x => [x.id, `${p.name} / ${x.title}`]));
+      return modal('編輯連結', [
+        { name: 'url', label: '網址或本地路徑', value: link.url },
+        { name: 'name', label: '名稱', value: link.name },
+        { name: 'icon', label: '圖示（留空＝自動）', value: link.icon, placeholder: '🚀　或　https://…/logo.png　或　D:\\icons\\a.png' },
+        { type: 'select', name: 'to', label: '所在區塊（分頁 / 區塊）', value: w.id, options: dests },
+      ], v => {
+        link.url = normUrl(v.url) || link.url;
+        link.name = v.name.trim() || displayName(link.url);
+        const ic = v.icon.trim(); if (ic) link.icon = ic; else delete link.icon;
+        if (v.to && v.to !== w.id) {
+          const dest = state.pages.flatMap(p => p.widgets).find(x => x.id === v.to);
+          w.links.splice(w.links.indexOf(link), 1);
+          dest.links.push(link);
+        }
+      });
+    }
+    case 'star': if (link.star) delete link.star; else link.star = true; break;
+    case 'remindTodo': {
+      const t = w.items.find(x => x.id === btn.dataset.tid);
+      const def = t.remindAt || Math.ceil((Date.now() + 3600e3) / 900e3) * 900e3;   // 預設一小時後（取整 15 分）
+      return modal('設定提醒', [
+        { name: 'at', inputType: 'datetime-local', label: `「${t.text}」提醒時間`, value: toLocalInput(def) },
+        ...(t.remindAt ? [{ type: 'button', name: 'clr', label: '清除提醒', onClick: () => { delete t.remindAt; delete t.notified; save(); render(); } }] : []),
+      ], v => {
+        const ms = new Date(v.at).getTime();
+        if (!ms) return false;
+        t.remindAt = ms; delete t.notified;
+        askNotifyPermission();
+      }, '設定');
+    }
+    case 'copyPath': return copyText(link.url);
+    case 'delLink': w.links.splice(w.links.indexOf(link), 1); break;
+    case 'delTodo': w.items = w.items.filter(t => t.id !== btn.dataset.tid); break;
+  }
+  save(); render();
+};
+
+// Block navigation while editing
+$('#board').addEventListener('click', e => { if (editing && e.target.closest('.link')) e.preventDefault(); }, true);
+
+// 常用列：編輯模式下不跳頁，✕ 取消星號
+$('#favs').onclick = e => {
+  const un = e.target.closest('[data-unstar]');
+  if (un) { e.preventDefault(); delete findLinkAnywhere(un.dataset.unstar).star; save(); render(); return; }
+  if (editing && e.target.closest('.pill')) e.preventDefault();
+};
+
+// Notes / todo
+$('#board').addEventListener('input', e => {
+  const id = e.target.dataset.notes;
+  if (id) { findWidget(id).text = e.target.value; save(); }
+});
+
+/* ===== 筆記 Markdown：平常顯示排版結果，點一下切成 textarea 編輯，離開（blur）切回 ===== */
+let editingNote = null;
+$('#board').addEventListener('click', e => {
+  const cb = e.target.closest('[data-mdline]');
+  if (cb) {                                   // 勾選 - [ ] / - [x]：直接改原文那一行
+    const w = findWidget(cb.closest('.widget').dataset.wid), lines = w.text.split('\n'), n = +cb.dataset.mdline;
+    lines[n] = lines[n].replace(/\[( |x|X)\]/, m => m === '[ ]' ? '[x]' : '[ ]');
+    w.text = lines.join('\n'); save(); render(); return;
+  }
+  const view = e.target.closest('[data-mdview]');
+  if (!view || e.target.closest('a')) return;
+  editingNote = view.dataset.mdview; render();
+  const ta = document.querySelector(`[data-notes="${editingNote}"]`);
+  if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+});
+$('#board').addEventListener('focusout', e => {
+  if (!e.target.dataset.notes) return;
+  editingNote = null;
+  // 等點擊事件先跑完（避免吃掉同時點的按鈕）；若是直接點了另一則筆記進入編輯，就不要再重畫搶走焦點
+  setTimeout(() => { if (editingNote === null) render(); });
+});
+
+// 精簡 Markdown（不靠外部函式庫，離線可用）：標題、粗斜體、刪除線、行內/區塊程式碼、清單、勾選、引用、分隔線、表格、連結
+// 另外自動把網址與本機路徑（D:\…、\\server\…）變成可點連結
+function renderMd(src) {
+  const lines = String(src).replace(/\r/g, '').split('\n');
+  const out = [];
+  let i = 0, para = [];
+  const flush = () => { if (para.length) { out.push(`<p>${para.map(mdInline).join('<br>')}</p>`); para = []; } };
+  while (i < lines.length) {
+    const l = lines[i];
+    let m;
+    if (/^\s*```/.test(l)) {                                   // 程式碼區塊
+      flush(); const buf = []; i++;
+      while (i < lines.length && !/^\s*```/.test(lines[i])) buf.push(lines[i++]);
+      out.push(`<pre><code>${esc(buf.join('\n'))}</code></pre>`); i++; continue;
+    }
+    if (!l.trim()) { flush(); i++; continue; }
+    if ((m = l.match(/^(#{1,4})\s+(.*)$/))) { flush(); out.push(`<h${m[1].length}>${mdInline(m[2])}</h${m[1].length}>`); i++; continue; }
+    if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(l)) { flush(); out.push('<hr>'); i++; continue; }
+    if (/^\s*>/.test(l)) {                                       // 引用
+      flush(); const buf = [];
+      while (i < lines.length && /^\s*>/.test(lines[i])) buf.push(lines[i++].replace(/^\s*>\s?/, ''));
+      out.push(`<blockquote>${buf.map(mdInline).join('<br>')}</blockquote>`); continue;
+    }
+    if (/^\s*\|.*\|\s*$/.test(l) && /^\s*\|?[\s:|-]+\|?\s*$/.test(lines[i + 1] || '') && (lines[i + 1] || '').includes('-')) {   // 表格
+      flush();
+      const cells = r => r.trim().replace(/^\||\|$/g, '').split('|').map(c => mdInline(c.trim()));
+      const head = cells(l); i += 2; const rows = [];
+      while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) rows.push(cells(lines[i++]));
+      out.push(`<table><tr>${head.map(c => `<th>${c}</th>`).join('')}</tr>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</table>`);
+      continue;
+    }
+    if (/^\s*([-*+]|\d+[.)])\s+/.test(l)) {                      // 清單（縮排 2 格以上算下一層）
+      flush();
+      let html = '', depth = 0;
+      const stack = [];
+      while (i < lines.length && (m = lines[i].match(/^(\s*)([-*+]|\d+[.)])\s+(.*)$/))) {
+        const lvl = Math.floor(m[1].replace(/\t/g, '  ').length / 2);
+        while (depth <= lvl) { const tag = /\d/.test(m[2]) ? 'ol' : 'ul'; html += `<${tag}>`; stack.push(tag); depth++; }
+        while (depth > lvl + 1) { html += `</${stack.pop()}>`; depth--; }
+        const want = /\d/.test(m[2]) ? 'ol' : 'ul';                // 同層 - 與 1. 交替時換清單類型
+        if (stack[stack.length - 1] !== want) { html += `</${stack.pop()}><${want}>`; stack.push(want); }
+        const t = m[3].match(/^\[( |x|X)\]\s*(.*)$/);
+        html += t ? `<li class="task ${t[1] !== ' ' ? 'done' : ''}"><input type="checkbox" data-mdline="${i}" ${t[1] !== ' ' ? 'checked' : ''}><span>${mdInline(t[2])}</span></li>`
+                  : `<li>${mdInline(m[3])}</li>`;
+        i++;
+      }
+      while (stack.length) html += `</${stack.pop()}>`;
+      out.push(html); continue;
+    }
+    para.push(l); i++;
+  }
+  flush();
+  return out.join('');
+}
+function mdInline(s) {
+  const keep = [];                                             // 已產生的 HTML 先抽出來，避免被後面規則再處理
+  const hold = h => `\u0000${keep.push(h) - 1}\u0000`;
+  const link = (href, text, cls = '') => hold(`<a${cls ? ` class="${cls}"` : ''} href="${esc(isLocal(href) ? toFileUrl(href) : href)}" target="_blank" rel="noopener" title="${esc(href)}">${text}</a>`);
+  s = s.replace(/`([^`]+)`/g, (_, c) => hold(`<code>${esc(c)}</code>`));
+  s = s.replace(/\[([^\]]+)\]\(([^)\s]+(?:\s[^)]*)?)\)/g, (_, t, u) => link(u.trim(), esc(t), isLocal(u) ? 'path' : ''));
+  s = s.replace(/https?:\/\/[^\s<>"'，。、）)]+/g, u => link(u, esc(u)));
+  // 本機路徑：到行尾或中文標點為止（路徑可含空白，例如 D:\My Docs\x.md）
+  s = s.replace(/(?:[A-Za-z]:\\|\\\\[\w.$-]+\\)[^\n<>"|?*，。、；）\u0000]*/g, p => { p = p.replace(/\s+$/, ''); return link(p, esc(p), 'path'); });
+  s = esc(s).replace(/&lt;br&gt;/g, '<br>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/__([^_]+)__/g, '<b>$1</b>')
+       .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<i>$2</i>')
+       .replace(/~~([^~]+)~~/g, '<s>$1</s>');
+  return s.replace(/\u0000(\d+)\u0000/g, (_, n) => keep[n]);
+}
+$('#board').addEventListener('change', e => {
+  const tid = e.target.dataset.todo;
+  if (!tid) return;
+  const w = findWidget(e.target.closest('.widget').dataset.wid);
+  const t = w.items.find(x => x.id === tid);
+  t.done = e.target.checked; save(); render();
+});
+$('#board').addEventListener('submit', e => {
+  const wid = e.target.dataset.todoform;
+  if (!wid) return;
+  e.preventDefault();
+  let text = e.target.querySelector('input').value.trim();
+  if (!text) return;
+  const item = { id: uid(), text, done: false };
+  // 「14:30 開會」→ 今天 14:30 提醒（時間已過就設明天）
+  const m = text.match(/^(\d{1,2})[:：](\d{2})\s+(.+)$/);
+  if (m && +m[1] < 24 && +m[2] < 60) {
+    const d = new Date(); d.setHours(+m[1], +m[2], 0, 0);
+    if (d < Date.now()) d.setDate(d.getDate() + 1);
+    item.text = m[3]; item.remindAt = d.getTime();
+    askNotifyPermission();
+  }
+  findWidget(wid).items.push(item);
+  save(); render();
+  document.querySelector(`[data-todoform="${wid}"] input`).focus();
+});
+
+/* ===== Drag & drop (edit mode)：連結可跨區塊排序，區塊拖標題列排序；拖到分頁標籤可移到該分頁 ===== */
+// 拖曳中即時畫出「插入線」：連結為上/下橫線，區塊為左/右直線；放開時依插入線位置落點
+let drag = null;
+const clearDrop = () => document.querySelectorAll('.drop-before,.drop-after,.drag-over')
+  .forEach(x => x.classList.remove('drop-before', 'drop-after', 'drag-over'));
+$('#board').addEventListener('dragstart', e => {
+  if (!editing) return;
+  const t = e.target.nodeType === 3 ? e.target.parentElement : e.target;
+  const l = t.closest('.link'), h = t.closest('.w-head');
+  let el;
+  if (l) { drag = { kind: 'link', lid: l.dataset.lid, wid: l.dataset.wid }; el = l; }
+  else if (h) { el = h.closest('.widget'); drag = { kind: 'widget', wid: el.dataset.wid }; }
+  else return;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', '');
+  requestAnimationFrame(() => el.classList.add('dragging'));
+});
+$('#board').addEventListener('dragend', () => { drag = null; clearDrop(); render(); });
+$('#board').addEventListener('dragover', e => {
+  if (!drag) return;
+  const wEl = e.target.closest('.widget');
+  if (!wEl) return;
+  if (drag.kind === 'link') {
+    if (findWidget(wEl.dataset.wid).type !== 'links') return;
+    e.preventDefault();
+    clearDrop();
+    let over = e.target.closest('.link'), after;
+    if (over) after = e.clientY > over.getBoundingClientRect().top + over.offsetHeight / 2;
+    else { over = [...wEl.querySelectorAll('.link')].pop(); after = true; }  // 空白處 → 放到最後
+    if (over && over.dataset.lid !== drag.lid) over.classList.add(after ? 'drop-after' : 'drop-before');
+    else if (!over) wEl.classList.add('drag-over');                          // 空區塊
+  } else {
+    e.preventDefault();
+    clearDrop();
+    if (wEl.dataset.wid === drag.wid) return;
+    const r = wEl.getBoundingClientRect();
+    wEl.classList.add(e.clientX > r.left + r.width / 2 ? 'drop-after' : 'drop-before');
+  }
+});
+$('#board').addEventListener('drop', e => {
+  if (!drag) return;
+  e.preventDefault();
+  const sel = drag.kind === 'link' ? '.link' : '.widget';
+  const mark = document.querySelector(`${sel}.drop-before, ${sel}.drop-after`);
+  const after = mark && mark.classList.contains('drop-after');
+  if (drag.kind === 'link') {
+    const wEl = e.target.closest('.widget');
+    if (!wEl) return;
+    const from = findWidget(drag.wid), to = findWidget(wEl.dataset.wid);
+    if (!mark && !wEl.classList.contains('drag-over')) return;     // 放回原位
+    const [item] = from.links.splice(from.links.findIndex(l => l.id === drag.lid), 1);
+    const at = mark ? to.links.findIndex(l => l.id === mark.dataset.lid) + (after ? 1 : 0) : to.links.length;
+    to.links.splice(at, 0, item);
+  } else {
+    if (!mark) return;
+    const ws = page().widgets;
+    const [item] = ws.splice(ws.findIndex(w => w.id === drag.wid), 1);
+    ws.splice(ws.findIndex(w => w.id === mark.dataset.wid) + (after ? 1 : 0), 0, item);
+  }
+  save();
+});
+
+// 拖到分頁標籤 → 移到該分頁（區塊放最後；連結放進同名區塊，沒有就第一個書籤區塊，再沒有就新建同名區塊）
+$('#tabs').addEventListener('dragover', e => {
+  const tab = drag && e.target.closest('.tab[data-i]');
+  if (!tab || +tab.dataset.i === state.current) return;
+  e.preventDefault();
+  clearDrop();
+  tab.classList.add('drag-over');
+});
+$('#tabs').addEventListener('dragleave', e => { const tab = e.target.closest('.tab'); tab && !tab.contains(e.relatedTarget) && tab.classList.remove('drag-over'); });
+$('#tabs').addEventListener('drop', e => {
+  const tab = drag && e.target.closest('.tab[data-i]');
+  if (!tab) return;
+  e.preventDefault();
+  const dest = state.pages[+tab.dataset.i];
+  if (dest === page()) return;
+  const from = findWidget(drag.wid);
+  if (drag.kind === 'widget') {
+    page().widgets.splice(page().widgets.indexOf(from), 1);
+    dest.widgets.push(from);
+    toast(`已將區塊「${from.title}」移到「${dest.name}」`);
+  } else {
+    const [item] = from.links.splice(from.links.findIndex(l => l.id === drag.lid), 1);
+    const links = dest.widgets.filter(w => w.type === 'links');
+    let to = links.find(w => w.title === from.title) || links[0];
+    if (!to) { to = { id: uid(), type: 'links', title: from.title, links: [] }; dest.widgets.push(to); }
+    to.links.push(item);
+    toast(`已將「${item.name}」移到「${dest.name} / ${to.title}」`);
+  }
+  save();
+});
+
+/* ================= 通知中心 ================= */
+// 來源 1：待辦提醒（remindAt 到期）；來源 2：外部腳本用 notify.ps1 寫入同資料夾的 inbox.js（取代 ntfy）
+const notices = () => (state.notices ||= []);
+const canNotify = () => 'Notification' in window;
+function askNotifyPermission() {
+  if (canNotify() && Notification.permission === 'default') Notification.requestPermission().then(renderBell);
+}
+
+// 加入通知紀錄（id 重複略過）；popup = 跳桌面通知 + 頁內提示
+function pushNotice(n, popup) {
+  if (notices().some(x => x.id === n.id)) return;
+  state.notices = [{ read: false, ...n }, ...notices()].slice(0, 100);
+  if (!popup) return;
+  toast(`🔔 ${n.title ? n.title + '：' : ''}${n.text}`);
+  if (!canNotify() || Notification.permission !== 'granted') return;
+  try {
+    const x = new Notification(n.title || '起始頁通知', {
+      body: n.text, tag: n.id,
+      requireInteraction: n.kind === 'todo' || n.priority === 'high' || n.priority === 'urgent',
+    });
+    x.onclick = () => { window.focus(); openNotice(n.id); x.close(); };
+  } catch {}
+}
+
+function openNotice(id) {
+  const n = notices().find(x => x.id === id);
+  if (!n) return;
+  n.read = true;
+  const i = n.pageId ? state.pages.findIndex(p => p.id === n.pageId) : -1;
+  if (i >= 0) state.current = i;
+  if (n.click) window.open(n.click, '_blank', 'noopener');
+  save(); render();
+}
+
+// 不打斷輸入：正在打筆記 / 待辦時只更新 🔔，不重畫區塊
+function softRender() {
+  const a = document.activeElement;
+  if (a && a.closest && a.closest('#board, .mask') && /^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)) renderBell();
+  else render();
+}
+
+// 待辦提醒：每 15 秒檢查；頁面沒開時錯過的，下次開啟補發（一次最多跳 3 個）
+function checkReminders() {
+  const now = Date.now();
+  let pops = 0, changed = false;
+  state.pages.forEach(p => p.widgets.forEach(w => {
+    if (w.type !== 'todo') return;
+    w.items.forEach(t => {
+      if (!t.remindAt || t.notified || t.done || t.remindAt > now) return;
+      t.notified = true; changed = true;
+      const late = now - t.remindAt > 120e3;
+      pushNotice({ id: `todo-${t.id}-${t.remindAt}`, kind: 'todo', title: '⏰ 待辦提醒',
+        text: t.text + (late ? `（原定 ${fmtTime(t.remindAt)}）` : ''), pageId: p.id,
+        source: `${p.name} / ${w.title}`, at: now }, pops++ < 3);
+    });
+  }));
+  if (changed) { save(); softRender(); }
+}
+
+// 外部通知：輪詢 inbox.js（file:// 不能 fetch，改用動態 <script> 載入）
+// kind=todo / note：加進待辦清單或附加一行到筆記（list 指定區塊標題，找不到就用第一個同類區塊），不跳通知
+// 不看 inboxCursor，改記已套用的 id：舊版頁面當成通知讀過的，換新版後仍會補加
+function applyInboxItem(i) {
+  state.inboxApplied ||= [];
+  if (state.inboxApplied.includes(i.id)) return false;
+  if (state.pages.some(p => p.widgets.some(w => w.type === 'todo' && w.items.some(t => t.inboxId === i.id)))) {
+    state.inboxApplied.push(i.id); return false;       // 前一版已加過（以 inboxId 記錄）
+  }
+  const type = i.kind === 'todo' ? 'todo' : 'notes';
+  const text = i.message || i.title || '';
+  const all = state.pages.flatMap(p => p.widgets.filter(w => w.type === type));
+  let w = all.find(x => i.list && x.title === i.list) || all[0];
+  if (!w) {
+    w = type === 'todo' ? { id: uid(), type, title: i.list || '待辦', items: [] } : { id: uid(), type, title: i.list || '筆記', text: '' };
+    page().widgets.push(w);
+  }
+  if (type === 'todo') w.items.push({ id: uid(), text, done: false });
+  else w.text = w.text ? `${w.text.replace(/\s+$/, '')}\n${text}` : text;
+  state.inboxApplied = [...state.inboxApplied, i.id].slice(-200);
+  state.notices = notices().filter(n => n.id !== `in-${i.id}`);   // 舊版頁面誤記成通知的移除
+  toast(`📝 已加入${type === 'todo' ? '待辦' : '筆記'}「${w.title}」：${text}`);
+  return true;
+}
+
+window.STARTPAGE_INBOX = items => {
+  if (!Array.isArray(items)) return;
+  const applied = items.filter(i => i && (i.kind === 'todo' || i.kind === 'note'))
+    .sort((a, b) => a.ts - b.ts).filter(applyInboxItem).length;
+  if (applied) { save(); softRender(); }
+  const first = state.inboxCursor == null;             // 第一次：近 24 小時的列入紀錄但不跳通知
+  const cursor = first ? Date.now() - 86400e3 : state.inboxCursor;
+  const fresh = items.filter(i => i && i.ts > cursor).sort((a, b) => a.ts - b.ts);
+  if (!fresh.length) { if (first) { state.inboxCursor = cursor; save(); } return; }
+  let pops = 0;
+  for (const i of fresh) {
+    if (i.kind === 'todo' || i.kind === 'note') continue;
+    const quiet = first || i.priority === 'min' || i.priority === 'low';
+    pushNotice({ id: `in-${i.id}`, kind: 'inbox', title: i.title || '', text: i.message || '',
+      priority: i.priority || 'default', click: i.click || '', source: i.source || '', at: i.ts }, !quiet && pops++ < 3);
+  }
+  state.inboxCursor = fresh[fresh.length - 1].ts;
+  save(); softRender();
+};
+let inboxStatus = null;   // { at, ok } 最後一次讀 inbox.js 的結果（顯示在 🔔 面板）
+function pollInbox() {
+  const s = document.createElement('script');
+  s.src = 'inbox.js?t=' + Date.now();
+  s.onload = () => { s.remove(); inboxStatus = { at: Date.now(), ok: true }; };
+  s.onerror = () => {
+    s.remove(); inboxStatus = { at: Date.now(), ok: false };
+    // 還沒有 inbox.js：從現在開始算，之後第一則通知才會正常跳出
+    if (state.inboxCursor == null) { state.inboxCursor = Date.now(); save(); }
+  };
+  document.head.appendChild(s);
+}
+
+function renderBell() {
+  const unread = notices().filter(n => !n.read).length;
+  const b = $('#badge');
+  b.hidden = !unread; b.textContent = unread > 99 ? '99+' : unread;
+  document.title = (unread ? `(${unread}) ` : '') + 'StartPage';
+  if ($('#npanel').classList.contains('show')) renderPanel();
+}
+
+function renderPanel() {
+  const perm = canNotify() ? Notification.permission : 'unsupported';
+  const permHtml = {
+    granted: '',
+    default: `<div class="nperm"><button data-nact="perm">開啟桌面通知</button>允許後，時間到或排程通知會跳出 Windows 通知</div>`,
+    denied: `<div class="nperm">桌面通知已被瀏覽器封鎖：點網址列左側圖示 → 網站權限 → 通知改為「允許」。目前只會在頁面內提示。</div>`,
+    unsupported: `<div class="nperm">此瀏覽器不支援桌面通知，只會在頁面內提示。</div>`,
+  }[perm] || '';
+  const now = Date.now();
+  const upcoming = state.pages.flatMap(p => p.widgets.filter(w => w.type === 'todo')
+    .flatMap(w => w.items.filter(t => t.remindAt > now && !t.done).map(t => ({ t, p }))))
+    .sort((a, b) => a.t.remindAt - b.t.remindAt).slice(0, 5);
+  const list = notices();
+  $('#npanel').innerHTML =
+    `<h4>通知<span><button data-nact="readall">全部已讀</button><button data-nact="clear">清除</button></span></h4>` + permHtml +
+    (upcoming.length ? `<div class="nsec">即將提醒</div>` + upcoming.map(({ t, p }) =>
+      `<div class="nitem" data-upage="${p.id}">⏰ ${esc(t.text)}<div class="t">${fmtTime(t.remindAt)} · ${esc(p.name)}</div></div>`).join('') : '') +
+    `<div class="nsec">通知紀錄</div>` +
+    (list.length ? list.map(n => `
+      <div class="nitem ${n.read ? '' : 'unread'}" data-nid="${esc(n.id)}">
+        ${n.priority === 'high' || n.priority === 'urgent' ? '❗ ' : ''}${n.title ? `<b>${esc(n.title)}</b>　` : ''}${esc(n.text)}
+        <div class="t">${fmtTime(n.at)}${n.source ? ' · ' + esc(n.source) : ''}${n.click ? ' · 🔗' : ''}</div>
+      </div>`).join('') : `<div class="nempty">沒有通知</div>`) +
+    `<div class="nstat">桌面通知：${{ granted: '✔ 已允許', default: '尚未允許', denied: '✖ 已封鎖', unsupported: '不支援' }[perm]}　·
+      收件匣：${!inboxStatus ? '檢查中…' : inboxStatus.ok ? `✔ ${fmtTime(inboxStatus.at)} 已檢查` : '尚無 inbox.js（還沒收過通知）'}
+      <button data-nact="test">送測試通知</button></div>`;
+}
+
+$('#btnBell').onclick = e => {
+  e.stopPropagation();
+  const p = $('#npanel');
+  p.classList.toggle('show');
+  if (p.classList.contains('show')) renderPanel();
+};
+$('#npanel').onclick = e => {
+  e.stopPropagation();
+  const act = e.target.closest('[data-nact]')?.dataset.nact;
+  if (act === 'perm') return Notification.requestPermission().then(renderBell);
+  if (act === 'test') {
+    const go = () => { pushNotice({ id: 'test-' + uid(), kind: 'test', title: '測試通知', text: '看到這則就代表通知正常 👍', at: Date.now() }, true); save(); render(); };
+    return canNotify() && Notification.permission === 'default' ? Notification.requestPermission().then(go) : go();
+  }
+  if (act === 'readall') { notices().forEach(n => n.read = true); save(); return render(); }
+  if (act === 'clear') { state.notices = []; save(); return render(); }
+  const it = e.target.closest('[data-nid]'), up = e.target.closest('[data-upage]');
+  if (it) openNotice(it.dataset.nid);
+  else if (up) { state.current = Math.max(0, state.pages.findIndex(p => p.id === up.dataset.upage)); save(); render(); }
+  if (it || up) $('#npanel').classList.remove('show');
+};
+document.addEventListener('click', () => $('#npanel').classList.remove('show'));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#npanel').classList.remove('show'); });
+
+// 同時開多個起始頁分頁時，互相同步（避免舊資料覆蓋、重複通知）
+window.addEventListener('storage', e => {
+  if (e.key !== KEY || !e.newValue) return;
+  try { state = JSON.parse(e.newValue); softRender(); } catch {}
+});
+
+/* ================= DevOps Task ================= */
+// devops-tasks.ps1（用 az login token 呼叫 Azure DevOps REST）定時寫 devops.js；file:// 不能 fetch，同 inbox.js 用 <script> 輪詢
+let devops = null;          // { ts, org, project, error, items: [...] }
+let devopsMissing = false;  // 還沒有 devops.js
+window.STARTPAGE_DEVOPS = d => {
+  const changed = !devops || devops.ts !== d.ts;
+  devops = d; devopsMissing = false;
+  if (changed && state.pages.some(p => p.widgets.some(w => w.type === 'devops'))) softRender();
+};
+function pollDevops() {
+  const s = document.createElement('script');
+  s.src = 'devops.js?t=' + Date.now();
+  s.onload = () => s.remove();
+  s.onerror = () => { s.remove(); if (!devopsMissing) { devopsMissing = true; softRender(); } };
+  document.head.appendChild(s);
+}
+
+function devopsHtml(w) {
+  const cmd = `& "<安裝資料夾>\\devops-tasks.ps1" -Install`;
+  if (!opt().devops) return `<div class="empty">DevOps 整合已關閉：「⋯ → ⚙ 設定」開啟</div>`;
+  if (!devops) return devopsMissing
+    ? `<div class="empty">尚無資料：先在 settings.json 填 devops.org，再於 PowerShell 執行<br><code>${esc(cmd)}</code><br>（建立每 30 分鐘自動更新的工作排程）</div>`
+    : `<div class="empty">讀取中…</div>`;
+  const all = devops.items || [];
+  const projects = [...new Set(all.map(t => t.project))].sort();
+  const items = w.project ? all.filter(t => t.project === w.project) : all;
+  const today = new Date().toISOString().slice(0, 10);
+  const age = Date.now() - devops.ts;
+  const meta = `<div class="dmeta">
+      <span title="${esc(new Date(devops.ts).toLocaleString('zh-TW'))}">${age > 3 * 3600e3 ? '⚠ ' : ''}更新 ${fmtTime(devops.ts)}</span>·
+      <span>${items.length} 筆</span>
+      ${projects.length > 1 ? `<select data-dproj="${w.id}"><option value="">全部專案</option>${projects.map(p => `<option${p === w.project ? ' selected' : ''}>${esc(p)}</option>`).join('')}</select>` : ''}
+      ${devops.error ? `<span class="err">✖ ${esc(devops.error)}</span>` : ''}
+    </div>`;
+  if (!items.length) return meta + `<div class="empty">${devops.error ? '無法取得資料' : '沒有未結的工作項 🎉'}</div>`;
+  // 依專案分組；組內：有到期日的先（越早越前），再依最後異動
+  const groups = {};
+  items.forEach(t => (groups[t.project] ||= []).push(t));
+  const sortKey = t => (t.due || '9999') + '|' + (9999999999 - Date.parse(t.changed || 0) / 1000);
+  return meta + Object.keys(groups).sort().map(p => `
+    ${w.project ? '' : `<div class="dgroup">${esc(p)}（${groups[p].length}）</div>`}
+    ${groups[p].sort((a, b) => sortKey(a).localeCompare(sortKey(b))).map(t => `
+      <a class="dtask" href="${esc(t.url)}" target="_blank" rel="noopener" title="${esc(`${t.type} ${t.id}：${t.title}\n上層：${t.parentTitle || '—'}\n最後異動：${t.changed}`)}">
+        <div class="dt"><span class="did">${t.id}</span><span class="dname">${esc(t.title)}</span><span class="dstate ${t.state === 'New' || t.state === 'To Do' ? 'new' : ''}">${esc(t.state)}</span></div>
+        <div class="dsub">${t.due ? `<span class="ddue ${t.due < today ? 'overdue' : ''}">📅 ${t.due.slice(5)}</span> · ` : ''}${t.remaining != null ? `⏳ ${t.remaining}h · ` : ''}${esc(t.parentTitle || '（無上層）')}</div>
+      </a>`).join('')}`).join('');
+}
+$('#board').addEventListener('change', e => {
+  const wid = e.target.dataset.dproj;
+  if (!wid) return;
+  findWidget(wid).project = e.target.value;
+  save(); render();
+});
+
+/* ================= Outlook 行事曆 ================= */
+// calendar-sync.ps1（EWS + 目前登入者 AD session）定時寫 calendar.js；同樣用 <script> 輪詢
+// 會議開始前 calendarRemind 分鐘跳通知（走 🔔 通知中心，每場只跳一次）
+const CAL_REMIND = opt().calendarRemind;
+let calendar = null, calendarMissing = false;
+window.STARTPAGE_CALENDAR = d => { calendar = d; calendarMissing = false; checkMeetings(); };
+function pollCalendar() {
+  const s = document.createElement('script');
+  s.src = 'calendar.js?t=' + Date.now();
+  s.onload = () => { s.remove(); renderCal(); };      // 每分鐘也順便更新「進行中 / N 分後」
+  s.onerror = () => { s.remove(); calendarMissing = true; renderCal(); };
+  document.head.appendChild(s);
+}
+function checkMeetings() {
+  if (!calendar) return;
+  const now = Date.now();
+  state.calNotified ||= [];
+  let changed = false;
+  for (const ev of calendar.items || []) {
+    if (ev.allDay || ev.status === 'Free' || state.calNotified.includes(ev.id)) continue;
+    const mins = (ev.start - now) / 60e3;
+    if (mins > CAL_REMIND || mins < -2) continue;
+    state.calNotified = [...state.calNotified, ev.id].slice(-200);
+    pushNotice({ id: 'cal-' + ev.id, kind: 'calendar', title: `📅 ${Math.max(0, Math.round(mins))} 分鐘後開會`,
+      text: `${fmtTime(ev.start)} ${ev.subject}${ev.location ? '（' + ev.location + '）' : ''}`, priority: 'high', source: 'Outlook 行事曆', at: now }, true);
+    changed = true;
+  }
+  if (changed) { save(); softRender(); }
+}
+
+// 固定位置：時鐘下方一行「下一場」倒數（#calNext）＋ 常用列下方橫向 1~3 天（#calStrip），不是一般區塊
+const calHM = ms => new Date(ms).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
+const calMins = ms => Math.round((ms - Date.now()) / 60e3);
+const calInWords = m => m < 60 ? `${m} 分後` : m < 24 * 60 ? `${Math.floor(m / 60)} 小時${m % 60 ? ` ${m % 60} 分` : ''}後` : '';
+
+// 橫向 1~3 天行事曆（設定 calendarStrip）；關閉時只留時鐘下方倒數
+const CAL_STRIP = opt().calendarStrip;
+
+function renderCal() {
+  const strip = $('#calStrip'), nextEl = $('#calNext');
+  const cmd = `& "<安裝資料夾>\\calendar-sync.ps1" -Install`;
+  if (!opt().calendar) { strip.hidden = true; nextEl.innerHTML = ''; return; }
+  if (!CAL_STRIP) strip.hidden = true;
+  if (!calendar) {
+    nextEl.innerHTML = calendarMissing && !CAL_STRIP
+      ? `<div class="cnext" title="${esc(cmd)}"><span class="cn-tag">📅</span><span class="cn-sub">行事曆尚未同步：在 settings.json 填 calendar.ewsUrl，再執行 calendar-sync.ps1 -Install</span></div>` : '';
+    if (!CAL_STRIP) return;
+    strip.hidden = !calendarMissing;
+    strip.innerHTML = `<div class="calstrip-in"><div class="cal-head"><span class="title">📅 行事曆</span></div>
+      <div class="cal-empty" style="padding:10px 12px">尚無資料：在 settings.json 填 calendar.ewsUrl，再於 PowerShell 執行 <code>${esc(cmd)}</code>（每 10 分鐘自動同步 Outlook）</div></div>`;
+    return;
+  }
+  const now = Date.now(), d0 = new Date(); d0.setHours(0, 0, 0, 0);
+  const days = Math.min(3, Math.max(1, state.calDays || 3));
+  const all = (calendar.items || []).slice().sort((a, b) => a.start - b.start || a.end - b.end);
+  const timed = all.filter(e => !e.allDay);
+  const current = timed.filter(e => e.start <= now && e.end > now);
+  const next = timed.find(e => e.start > now);
+
+  // 時鐘下方：進行中 > 下一場（今天內）> 今天已無會議
+  const pill = (cls, tag, e) => `<div class="cnext ${cls}" title="${esc(`${e.subject}${e.location ? '\n地點：' + e.location : ''}`)}">
+      <span class="cn-tag">${tag}</span><span class="cn-sub">${calHM(e.start)} ${esc(e.subject)}${e.location ? ` · ${esc(e.location)}` : ''}</span></div>`;
+  const endOfToday = d0.getTime() + 86400e3;
+  if (current.length) nextEl.innerHTML = pill('now', `● 進行中（到 ${calHM(current[0].end)}）`, current[0]);
+  else if (next && next.start < endOfToday) nextEl.innerHTML = pill(calMins(next.start) <= CAL_REMIND ? 'soon' : '', `📅 ${calInWords(calMins(next.start))}`, next);
+  else nextEl.innerHTML = `<div class="cnext"><span class="cn-tag">📅</span><span class="cn-sub">今天沒有其他會議了</span></div>`;
+  if (!CAL_STRIP) return;
+
+  // 橫向 1~3 天
+  const cols = [];
+  for (let i = 0; i < days; i++) {
+    const s = d0.getTime() + i * 86400e3, e = s + 86400e3, d = new Date(s);
+    const wd = '日一二三四五六'[d.getDay()];
+    const evs = all.filter(x => x.end > s && x.start < e);
+    cols.push(`<div class="cal-col ${i === 0 ? 'today' : ''}">
+      <div class="cday">${['今天', '明天', '後天'][i]}　${d.getMonth() + 1}/${d.getDate()}（${wd}）${evs.length ? `<span style="font-weight:400"> · ${evs.length} 場</span>` : ''}</div>
+      ${evs.length ? evs.map(ev => {
+        const cls = ev.end <= now ? 'past' : ev.start <= now && !ev.allDay ? 'now' : ev === next ? 'next' : '';
+        const tent = ev.response === 'NoResponseReceived' || ev.status === 'Tentative';
+        const tag = cls === 'now' ? `<span class="cnow">進行中</span>` : cls === 'next' && calInWords(calMins(ev.start)) ? `<span class="cnow" style="color:var(--accent)">${calInWords(calMins(ev.start))}</span>` : '';
+        return `<div class="cev ${cls} ${tent ? 'tentative' : ''}" title="${esc(`${ev.subject}\n${ev.allDay ? '整天' : calHM(ev.start) + '–' + calHM(ev.end)}${ev.location ? '\n地點：' + ev.location : ''}${ev.organizer ? '\n召集人：' + ev.organizer : ''}`)}">
+          <span class="ctime">${ev.allDay ? '整天' : `${calHM(ev.start)}–${calHM(ev.end)}`}</span>
+          <div class="cbody"><div class="csub">${esc(ev.subject)}${tag}</div>${ev.location ? `<div class="cloc">📍 ${esc(ev.location)}</div>` : ''}</div>
+        </div>`;
+      }).join('') : `<div class="cal-empty">沒有行程</div>`}
+    </div>`);
+  }
+  strip.hidden = false;
+  strip.classList.toggle('collapsed', !!state.calCollapsed);
+  strip.innerHTML = `<div class="calstrip-in">
+    <div class="cal-head">
+      <button class="collapse" data-cal="toggle">${state.calCollapsed ? '▸' : '▾'}</button>
+      <span class="title">📅 行事曆</span>
+      <span class="cmeta" title="${esc(new Date(calendar.ts).toLocaleString('zh-TW'))}">${now - calendar.ts > 3600e3 ? '⚠ ' : ''}同步 ${fmtTime(calendar.ts)} · <a href="${esc(calendar.owa)}" target="_blank" rel="noopener">開 OWA</a>
+        ${calendar.error ? ` · <span class="err">✖ ${esc(calendar.error)}</span>` : ''}</span>
+      <span class="seg">${[1, 2, 3].map(n => `<button data-cal="${n}" class="${n === days ? 'on' : ''}">${n} 天</button>`).join('')}</span>
+    </div>
+    <div class="cal-days" style="--cols:${days}">${cols.join('')}</div>
+  </div>`;
+}
+$('#calStrip').onclick = e => {
+  const v = e.target.closest('[data-cal]')?.dataset.cal;
+  if (!v) return;
+  if (v === 'toggle') state.calCollapsed = !state.calCollapsed;
+  else state.calDays = +v;
+  save(); renderCal();
+};
+
+/* ================= Import / Export ================= */
+function exportJson() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `startpage-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+$('#fileInput').onchange = async e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  const text = await f.text();
+  try {
+    let msg = '匯入完成';
+    if (/\.json$/i.test(f.name)) {
+      const s = JSON.parse(text);
+      if (Array.isArray(s.pages)) {
+        // 完整設定檔（匯出的備份）：整份取代
+        if (!confirm('這是完整設定檔，會取代目前所有內容，確定？')) return;
+        state = s;
+      } else {
+        // 片段：{ page?, widgets: [{ title, links: [{ name, url }] }] } 或直接一個陣列 → 併入指定 / 目前分頁
+        const widgets = Array.isArray(s) ? s : s.widgets;
+        if (!Array.isArray(widgets)) throw new Error('格式不正確（需要 pages 或 widgets）');
+        msg = mergeWidgets(widgets, s.page);
+      }
+    } else {
+      msg = importBookmarksHtml(text);
+    }
+    save(); render();
+    alert(msg);
+  } catch (err) { alert('匯入失敗：' + err.message); }
+};
+
+// Chrome / Edge / Firefox 匯出的書籤 HTML（Netscape 格式）→ 併入目前分頁，每個資料夾一個區塊
+function importBookmarksHtml(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const widgets = [];
+  const walk = (dl, title) => {
+    const links = [];
+    for (const dt of dl.querySelectorAll(':scope > dt, :scope > p > dt')) {
+      const a = dt.querySelector(':scope > a');
+      const h3 = dt.querySelector(':scope > h3');
+      const sub = dt.querySelector(':scope > dl');
+      if (a && /^https?:/i.test(a.href)) links.push({ id: uid(), name: a.textContent.trim() || host(a.href), url: a.href });
+      if (h3 && sub) walk(sub, h3.textContent.trim());
+    }
+    if (links.length) widgets.push({ id: uid(), type: 'links', title, links });
+  };
+  const root = doc.querySelector('dl');
+  if (!root) throw new Error('找不到書籤內容');
+  walk(root, '未分類');
+  if (!widgets.length) throw new Error('沒有可匯入的連結');
+  return mergeWidgets(widgets);
+}
+
+// 併入分頁（指定 pageName 且存在就用它，否則目前分頁）：同名連結區塊就把新連結加進去（網址重複略過），否則新增區塊
+function mergeWidgets(widgets, pageName) {
+  const cur = (pageName && state.pages.find(p => p.name === pageName)) || page();
+  let added = 0, skipped = 0;
+  for (const w of widgets) {
+    const type = w.type || (w.links ? 'links' : w.items ? 'todo' : 'notes');
+    if (type !== 'links') { cur.widgets.push({ ...structuredClone(w), id: uid(), type }); continue; }
+    const links = (w.links || []).filter(l => l && l.url)
+      .map(l => ({ ...l, id: uid(), url: normUrl(l.url), name: l.name || displayName(l.url) }));
+    let target = cur.widgets.find(x => x.type === 'links' && x.title === w.title);
+    if (!target) { target = { id: uid(), type: 'links', title: w.title || '未分類', links: [] }; cur.widgets.push(target); }
+    for (const l of links) {
+      if (target.links.some(x => x.url === l.url)) { skipped++; continue; }
+      target.links.push(l); added++;
+    }
+  }
+  return `已併入「${cur.name}」：新增 ${added} 個連結` + (skipped ? `，略過重複 ${skipped} 個` : '');
+}
+
+// 行事曆改成固定位置後，移除先前版本放進區塊裡的「行事曆」區塊
+if (state.pages.some(p => p.widgets.some(w => w.type === 'calendar'))) {
+  state.pages.forEach(p => p.widgets = p.widgets.filter(w => w.type !== 'calendar'));
+  save();
+}
+render();
+checkReminders(); setInterval(checkReminders, 15000);
+// 只輪詢有開啟的整合（設定見最上方 DEFAULT_OPTIONS）
+const O = opt();
+if (O.inbox) { pollInbox(); setInterval(pollInbox, O.inboxSec * 1000); }
+if (O.devops) { pollDevops(); setInterval(pollDevops, O.devopsSec * 1000); }
+if (O.calendar) { pollCalendar(); setInterval(pollCalendar, O.calendarSec * 1000); }
+</script>
+</body>
+</html>

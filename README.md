@@ -4,6 +4,8 @@
 
 **把每天會用到的連結、筆記、待辦、通知和會議放在同一頁。不用架伺服器、不用註冊帳號，資料只存在你的瀏覽器裡。**
 
+**線上試用（虛構資料，不用安裝）：<https://jungkang0911.github.io/StartPage/>**
+
 ![StartPage 淺色版：分頁、搜尋、書籤、筆記與待辦](docs/images/light-demo.png)
 
 ## 特色
@@ -27,6 +29,10 @@
 | 深色／淺色 | 右上角 ◐ 切換 |
 
 ![StartPage 深色主題](docs/images/dark-demo.png)
+
+## 線上試用
+
+打開 <https://jungkang0911.github.io/StartPage/> 就能操作：編輯、拖曳、筆記、待辦都能試，行事曆、DevOps、通知顯示的是虛構資料。你改的內容只存在自己的瀏覽器，「⋯ → 重設為預設內容」可以還原。
 
 ## 安裝
 
@@ -247,6 +253,7 @@ integrations/notify.ps1           通知／待辦／筆記
 integrations/devops-tasks.ps1     Azure DevOps 工作項
 integrations/calendar-sync.ps1    Outlook 行事曆
 SKILL.md                          給 AI 的使用指引
+docs/                             GitHub Pages 線上試用（scripts/build-pages.ps1 產生）
 docs/images/                      截圖
 ```
 
