@@ -295,16 +295,14 @@ const defaultState = () => ({
   pages: [{
     id: uid(), name: '首頁',
     widgets: [
+      // 範例連結（虛構網址），請在編輯模式換成自己的
       { id: uid(), type: 'links', title: '常用工具', links: [
-        { id: uid(), name: 'Google', url: 'https://www.google.com' },
-        { id: uid(), name: 'GitHub', url: 'https://github.com' },
-        { id: uid(), name: 'Azure DevOps', url: 'https://dev.azure.com' },
-        { id: uid(), name: 'ChatGPT', url: 'https://chatgpt.com' },
-        { id: uid(), name: 'Claude', url: 'https://claude.ai' },
+        { id: uid(), name: '團隊 Wiki', url: 'https://wiki.example.com', icon: '📘' },
+        { id: uid(), name: '專案看板', url: 'https://board.example.com', icon: '📋' },
+        { id: uid(), name: '報表中心', url: 'https://reports.example.com', icon: '📊' },
       ]},
-      { id: uid(), type: 'links', title: '新聞', links: [
-        { id: uid(), name: 'Hacker News', url: 'https://news.ycombinator.com' },
-        { id: uid(), name: 'iThome', url: 'https://www.ithome.com.tw' },
+      { id: uid(), type: 'links', title: '閱讀清單', links: [
+        { id: uid(), name: '技術週報', url: 'https://weekly.example.org', icon: '📰' },
       ]},
       { id: uid(), type: 'notes', title: '筆記', text: '在這裡記錄一些事情…\n（自動儲存）' },
       { id: uid(), type: 'todo', title: '待辦', items: [

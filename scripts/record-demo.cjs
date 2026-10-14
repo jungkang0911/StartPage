@@ -1,4 +1,6 @@
-const { chromium } = require('playwright');
+// playwright（自帶瀏覽器）或 playwright-core + 本機瀏覽器（PW_CHANNEL=msedge / chrome）
+const { chromium } = (() => { try { return require('playwright'); } catch { return require('playwright-core'); } })();
+const launchOpts = { headless: true, ...(process.env.PW_CHANNEL ? { channel: process.env.PW_CHANNEL } : {}) };
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
@@ -7,7 +9,7 @@ const { freezeClock, setClockText } = require('./demo-clock.cjs');
  const root = path.resolve(__dirname, '..');
  const frames = process.argv[3];
  fs.mkdirSync(frames, {recursive:true});
- const browser = await chromium.launch({headless:true});
+ const browser = await chromium.launch(launchOpts);
  for (const kind of ['drag','import']) {
   const page = await browser.newPage({viewport:{width:1152,height:650}, deviceScaleFactor:1});
   await freezeClock(page);
@@ -24,9 +26,9 @@ const { freezeClock, setClockText } = require('./demo-clock.cjs');
   }
   if(kind==='drag') {
    await page.locator('#btnEdit').click();
-   const source=page.locator('[data-lid="github"]');const dest=page.locator('[data-lid="wiki"]');
+   const source=page.locator('[data-lid="board"]');const dest=page.locator('[data-lid="learn"]');
    const a=await source.boundingBox(),b=await dest.boundingBox();
-   await shot('編輯模式：把 GitHub 拖到閱讀清單');
+   await shot('編輯模式：把「專案看板」拖到閱讀清單');
    await page.mouse.move(a.x+12,a.y+a.height/2);await page.mouse.down();
    for(let i=1;i<=60;i++) {
     const t=i/60, eased=t*t*(3-2*t);
@@ -38,17 +40,17 @@ const { freezeClock, setClockText } = require('./demo-clock.cjs');
     await page.screenshot({path:path.join(frames,`drag-${String(n++).padStart(3,'0')}.png`)});
    }
    await page.mouse.up();
-   if(await page.locator('[data-lid="github"]').getAttribute('data-wid')!=='reading')throw Error('Real drag failed');
-   await page.locator('#btnDone').click();for(let i=0;i<8;i++)await shot('完成：GitHub 已移到閱讀清單');
+   if(await page.locator('[data-lid="board"]').getAttribute('data-wid')!=='reading')throw Error('Real drag failed');
+   await page.locator('#btnDone').click();for(let i=0;i<8;i++)await shot('完成：「專案看板」已移到閱讀清單');
   } else {
    await shot('匯入 JSON 片段：保留現有內容、加入新連結');
    await page.locator('#btnMenu').click();await shot('開啟匯入／匯出選單');
    for(let i=0;i<5;i++)await shot('選擇「匯入設定 (JSON)」');
    await page.locator('[data-mbtn="imp"]').click();
    page.on('dialog',d=>d.accept());
-   await page.locator('#fileInput').setInputFiles({name:'add-links.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({page:'首頁',widgets:[{title:'閱讀清單',links:[{name:'Node.js 文件',url:'https://nodejs.org/docs',icon:'📗'}]}]}))});
-   await page.getByText('Node.js 文件',{exact:true}).waitFor();
-   for(let i=0;i<12;i++)await shot('完成：Node.js 文件已加入閱讀清單');
+   await page.locator('#fileInput').setInputFiles({name:'add-links.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({page:'首頁',widgets:[{title:'閱讀清單',links:[{name:'API 文件',url:'https://api.example.com/docs',icon:'📗'}]}]}))});
+   await page.getByText('API 文件',{exact:true}).waitFor();
+   for(let i=0;i<12;i++)await shot('完成：「API 文件」已加入閱讀清單');
   }
   await page.close();
  }

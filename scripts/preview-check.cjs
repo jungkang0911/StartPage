@@ -1,11 +1,13 @@
 // Run with Playwright installed: node scripts/preview-check.cjs <installed-index.html>
-const { chromium } = require('playwright');
+// playwright（自帶瀏覽器）或 playwright-core + 本機瀏覽器（PW_CHANNEL=msedge / chrome）
+const { chromium } = (() => { try { return require('playwright'); } catch { return require('playwright-core'); } })();
+const launchOpts = { headless: true, ...(process.env.PW_CHANNEL ? { channel: process.env.PW_CHANNEL } : {}) };
 const { pathToFileURL } = require('node:url');
 const path = require('node:path');
 const fs = require('node:fs');
 const { freezeClock, setClockText } = require('./demo-clock.cjs');
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch(launchOpts);
   const page = await browser.newPage({ viewport: { width: 1440, height: 960 }, deviceScaleFactor: 1 });
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
@@ -18,6 +20,10 @@ const { freezeClock, setClockText } = require('./demo-clock.cjs');
   const images = path.resolve(__dirname, '../docs/images');
   fs.mkdirSync(images, { recursive: true });
   await page.screenshot({ path: path.join(images, 'light-demo.png'), fullPage: true });
+  await page.locator('#btnMenu').click();
+  await page.locator('[data-mbtn="set"]').click();
+  await page.screenshot({ path: path.join(images, 'settings.png') });
+  await page.keyboard.press('Escape');
   await page.locator('#btnTheme').click();
   await page.screenshot({ path: path.join(images, 'dark-demo.png'), fullPage: true });
   await page.locator('#btnEdit').click();
