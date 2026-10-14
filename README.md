@@ -130,7 +130,7 @@ window.STARTPAGE_OPTIONS = {
 
 ## 整合功能（選用）
 
-![行事曆、DevOps 工作項與通知整合（虛構資料）](docs/images/integrations-demo.png)
+![行事曆、DevOps 工作項與通知整合的操作動畫（虛構資料）](docs/images/integrations-demo.gif)
 
 開啟行事曆後，時鐘下方會顯示進行中或下一場會議；開了 `calendarStrip` 的話，常用列下方還會顯示 1~3 天的行程。DevOps 區塊會依專案分組列出指派給你的未結工作項，過期的到期日標成紅色。右上角 🔔 會累積各種通知。
 

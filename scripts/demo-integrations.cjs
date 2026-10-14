@@ -66,10 +66,58 @@ fs.writeFileSync(path.join(dir, 'options.js'), 'window.STARTPAGE_OPTIONS = { dev
   await page.locator('.dtask').first().waitFor();
   await page.locator('.cal-col').first().waitFor();
   await page.evaluate(() => document.querySelector('.toast')?.classList.remove('show'));
-  await page.screenshot({ path: path.join(images, 'integrations-demo.png'), fullPage: true });
+  // 靜態總覽圖已由 integrations-demo.gif 取代
   await page.locator('#btnBell').click();
   await page.locator('.nitem').first().waitFor();
   await page.screenshot({ path: path.join(images, 'notifications.png'), clip: { x: 900, y: 0, width: 540, height: 560 } });
+  await ctx.close();
+
+  // 動畫：給了第二個參數（frames 資料夾）才錄，之後用 encode-demo.py 轉成 integrations-demo.gif
+  const frames = process.argv[3];
+  if (frames) {
+    fs.mkdirSync(frames, { recursive: true });
+    fs.copyFileSync(path.join(dir, 'inbox.js'), path.join(dir, 'inbox.js.orig'));
+    const c2 = await browser.newContext({ viewport: { width: 1152, height: 650 }, timezoneId: 'Asia/Taipei', locale: 'zh-TW' });
+    const p = await c2.newPage();
+    p.on('pageerror', e => errors.push(e.message));
+    await p.clock.install({ time: now });
+    await p.clock.pauseAt(now);
+    await p.addInitScript(s => { if (!localStorage.getItem('startpage.v1')) localStorage.setItem('startpage.v1', s); }, JSON.stringify(cfg));
+    await p.goto(pathToFileURL(html).href);
+    await p.locator('.dtask').first().waitFor();
+    await p.evaluate(() => document.querySelector('.toast')?.classList.remove('show'));
+    let n = 0;
+    const shot = async (label, hold = 1) => {
+      await p.evaluate(label => {
+        let b = document.querySelector('#demo-label');
+        if (!b) { b = document.createElement('div'); b.id = 'demo-label'; b.style.cssText = 'position:fixed;top:64px;left:50%;transform:translateX(-50%);background:#1e3a8a;color:#fff;padding:10px 22px;border-radius:10px;z-index:9998;font:18px system-ui;white-space:nowrap'; document.body.append(b); }
+        b.textContent = label;
+      }, label);
+      const file = path.join(frames, `integrations-${String(n++).padStart(3, '0')}.png`);
+      await p.screenshot({ path: file });
+      for (let i = 1; i < hold; i++) fs.copyFileSync(file, path.join(frames, `integrations-${String(n++).padStart(3, '0')}.png`));
+    };
+    const scrollTo = async y => { for (let i = 1; i <= 8; i++) { await p.evaluate(([y, t]) => scrollTo(0, y * t), [y, i / 8]); await shot(await p.locator('#demo-label').textContent()); } };
+    await shot('時鐘下方：進行中 / 下一場會議倒數', 8);
+    await p.locator('[data-cal="1"]').click(); await shot('行事曆可切換 1 天', 5);
+    await p.locator('[data-cal="2"]').click(); await shot('行事曆可切換 2 天', 5);
+    await p.locator('[data-cal="3"]').click(); await shot('行事曆可切換 3 天', 5);
+    await scrollTo(560);
+    await shot('DevOps：依專案分組，過期標紅', 8);
+    await p.locator('[data-dproj]').selectOption('Website'); await shot('DevOps：篩選單一專案', 8);
+    await p.locator('[data-dproj]').selectOption(''); await scrollTo(0);
+    // 外部腳本送來一則新通知：改寫 inbox.js，讓時間前進 10 秒觸發輪詢
+    write('inbox.js', 'STARTPAGE_INBOX', [{ id: 'n4', ts: now + 5e3, title: '夜間批次', message: '報表已產生：月結報表.xlsx', priority: 'default', click: '', source: 'notify.ps1' },
+      ...JSON.parse(fs.readFileSync(path.join(dir, 'inbox.js.orig'), 'utf8').match(/\((.*)\);/s)[1])]);
+    await p.clock.runFor(11000);
+    await p.locator('.toast.show').waitFor();
+    await shot('notify.ps1 送來新通知', 10);
+    await p.evaluate(() => document.querySelector('.toast').classList.remove('show'));
+    await p.locator('#btnBell').click(); await p.locator('.nitem').first().waitFor();
+    await shot('🔔 通知中心：排程、CI、監控通知集中查看', 14);
+    await c2.close();
+    fs.renameSync(path.join(dir, 'inbox.js.orig'), path.join(dir, 'inbox.js'));
+  }
   await browser.close();
   if (errors.length) throw Error(errors.join('\n'));
   console.log('Integration screenshots generated.');
